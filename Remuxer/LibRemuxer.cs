@@ -14,7 +14,7 @@ namespace Remuxer
 		[DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl)]
 		public static extern void closeLib();
 		[DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public static extern bool beginProcessing(Args args);
+		public static extern bool beginProcessing(Args a);
 		[DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl)]
 		public static extern float process();
 	}
