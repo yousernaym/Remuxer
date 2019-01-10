@@ -52,6 +52,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="LibRemuxer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -81,4 +82,11 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>set platform=x64
+if $(PlatformName) == x86 set platform=win32
+xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\*.dll" "$(TargetDir)" /D /Y
+xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\*.pdb" "$(TargetDir)" /D /Y
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>

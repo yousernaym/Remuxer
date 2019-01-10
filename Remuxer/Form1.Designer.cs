@@ -1,4 +1,4 @@
-﻿namespace Remux
+﻿namespace Remuxer
 {
 	partial class Form1
 	{

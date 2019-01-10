@@ -4,67 +4,38 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Remux
+namespace Remuxer
 {
 	public partial class Form1 : Form
 	{
-		string inputPath = "";
-		string audioPath = "";
-		string midiPath = "";
+		Args _args;		
 		bool incorrectFlags = false;
-		public Form1(string []args) : base()
+
+		public Form1(Args args) : base()
 		{
 			InitializeComponent();
-			bool midiFlag = false, audioFlag = false;
-
-			if (args == null || args.Length == 0)
-				showErrorMsg("No arguments specified.");
-
-			for (int i = 0; i < args.Length; i++)
-			{
-				string arg = args[i];
-				if (arg[0] == '-')
-				{
-					if (arg == "-m")
-						midiFlag = true;
-					else if (arg == "-a")
-						audioFlag = true;
-					else
-						showErrorMsg($"Invalid flag{arg}");
-				}
-				else
-				{
-					if (midiFlag)
-						midiPath = arg;
-					else if (audioFlag)
-						audioPath = arg;
-					else
-						inputPath = arg;
-
-				}
-			}
+			_args = args;			
 		}
 
-		private void showErrorMsg(string msg)
-		{
-			MessageBox.Show(msg);
-			incorrectFlags = true;
-		}
+		
 		private async void Form1_Load(object sender, EventArgs e)
 		{
 			if (incorrectFlags)
 				Close();
 			await Task.Run( delegate
 			{
-				for (int i = 0; i < 100; i++)
+				LibRemuxer.beginProcessing(_args);
+				float progress = 0;
+				while (progress < 1)
 				{
-					progressBar1.BeginInvoke(new Action(()=> progressBar1.Value += 1));
-					Thread.Sleep(200);
+					progress = LibRemuxer.process();
+					progressBar1.BeginInvoke(new Action(()=> progressBar1.Value = (int)(progress / 100)));
 				}
 			});
 			Close();
