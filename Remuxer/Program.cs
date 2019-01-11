@@ -14,42 +14,40 @@ namespace Remuxer
 		/// </summary>
 
 		[STAThread]
-		static void Main(string[] cmdLineArgs)
+		static void Main()
 		{
-			cmdLineArgs = "test.sid -m -a".Split(' '); ;
-			bool midiFlag = false, audioFlag = false;
+			string cmdLine = Environment.CommandLine;
+			//MessageBox.Show(cmdLineArgs);
+			cmdLine = "test.mod -m \"out put.mid\" -a output.wav";
 			Args args = new Args();
-			if (cmdLineArgs == null || cmdLineArgs.Length == 0)
+			if (string.IsNullOrWhiteSpace(cmdLine))
 			{
 				showErrorMsg("No arguments specified.");
 				return;
 			}
 
-			for (int i = 0; i < cmdLineArgs.Length; i++)
+			int pos = 0;
+			while (pos < cmdLine.Length)
 			{
-				string arg = cmdLineArgs[i];
-				if (arg[0] == '-')
+				while (pos < cmdLine.Length && cmdLine[pos] == ' ')
+					pos++;
+				if (cmdLine[pos] == '-' && pos < cmdLine.Length - 1)
 				{
-					if (arg == "-m")
-						midiFlag = true;
-					else if (arg == "-a")
-						audioFlag = true;
+					pos++;
+					char flag = cmdLine[pos++];
+					if (flag == 'm')
+						args.midiPath = readCmdLinePath(cmdLine, ref pos);
+					else if (flag == 'a')
+						args.audioPath = readCmdLinePath(cmdLine, ref pos);
 					else
 					{
-						showErrorMsg($"Invalid flag{arg}");
+						showErrorMsg($"Invalid flag -{cmdLine[pos]}");
 						return;
 					}
+	
 				}
 				else
-				{
-					if (midiFlag)
-						args.midiPath = arg;
-					else if (audioFlag)
-						args.audioPath = arg;
-					else
-						args.inputPath = arg;
-
-				}
+					args.inputPath = readCmdLinePath(cmdLine, ref pos);
 			}
 			LibRemuxer.initLib();
 			Application.EnableVisualStyles();
@@ -62,7 +60,23 @@ namespace Remuxer
 		{
 			MessageBox.Show(msg);
 		}
-	}
+
+		static string readCmdLinePath(string cmdLine, ref int pos)
+		{
+			while (pos < cmdLine.Length && cmdLine[pos] == ' ')
+				pos++;
+			char endingChar = ' ';
+			if (cmdLine[pos] == '\"')
+			{
+				endingChar = '\"';
+				pos++;
+			}
+			int startPos = pos;
+			while (pos < cmdLine.Length && cmdLine[pos] != endingChar)
+				pos++;
+			return cmdLine.Substring(startPos, pos++ - startPos);
+		}
+}
 
 	[StructLayout(LayoutKind.Sequential, Pack = 8)]
 	public struct Args
@@ -74,4 +88,6 @@ namespace Remuxer
 		public float songLengthS;
 		public int subSong;
 	}
+
+
 }
