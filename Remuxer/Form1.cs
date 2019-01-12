@@ -32,10 +32,10 @@ namespace Remuxer
 			{
 				LibRemuxer.beginProcessing(_args);
 				float progress = 0;
-				while (progress < 1)
+				while (progress >= 0)
 				{
+					progressBar1.BeginInvoke(new Action(() => progressBar1.Value = (int)(progress * 100)));
 					progress = LibRemuxer.process();
-					progressBar1.BeginInvoke(new Action(()=> progressBar1.Value = (int)(progress / 100)));
 				}
 			});
 			Close();
