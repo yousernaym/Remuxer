@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -18,7 +19,9 @@ namespace Remuxer
 		{
 			string cmdLine = Environment.CommandLine;
 			//MessageBox.Show(cmdLineArgs);
-			cmdLine = "test.mod -m \"out put.mid\" -a output.wav";
+			//cmdLine = "test.sid -m \"out put.mid\" -a output.wav";
+			cmdLine = "test.sid -m -a";
+
 			Args args = new Args();
 			if (string.IsNullOrWhiteSpace(cmdLine))
 			{
@@ -26,6 +29,7 @@ namespace Remuxer
 				return;
 			}
 
+			bool audioFlag = false, midiFlag = false;
 			int pos = 0;
 			while (pos < cmdLine.Length)
 			{
@@ -36,19 +40,58 @@ namespace Remuxer
 					pos++;
 					char flag = cmdLine[pos++];
 					if (flag == 'm')
+					{
+						midiFlag = true;
 						args.midiPath = readCmdLinePath(cmdLine, ref pos);
+					}
 					else if (flag == 'a')
+					{
+						audioFlag = true;
 						args.audioPath = readCmdLinePath(cmdLine, ref pos);
+					}
 					else
 					{
 						showErrorMsg($"Invalid flag -{cmdLine[pos]}");
 						return;
 					}
-	
+
 				}
 				else
+				{
 					args.inputPath = readCmdLinePath(cmdLine, ref pos);
+					if (string.IsNullOrWhiteSpace(args.inputPath))
+					{
+						MessageBox.Show("No input file specified.");
+						return;
+					}
+				}
 			}
+			if (midiFlag && args.midiPath == null)
+				args.midiPath = Path.ChangeExtension(args.inputPath, "mid");
+			if (audioFlag && args.audioPath == null)
+				args.audioPath = Path.ChangeExtension(args.inputPath, "wav");
+
+			//Check validity of input path
+			if (!File.Exists(args.inputPath))
+			{
+				MessageBox.Show($"Couldn't find or access input file {args.inputPath}");
+				return;
+			}
+
+			//Check validity of output paths
+			var path = args.midiPath;
+			try
+			{
+				checkPath(path);
+				path = args.audioPath;
+				checkPath(path);
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show($"Invalid path/filename: \"{path}\"\n\n{e.Message}");
+				return;
+			}
+		
 			LibRemuxer.initLib();
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
@@ -65,6 +108,8 @@ namespace Remuxer
 		{
 			while (pos < cmdLine.Length && cmdLine[pos] == ' ')
 				pos++;
+			if (pos >= cmdLine.Length || cmdLine[pos] == '-') //:No path was specified
+				return null;
 			char endingChar = ' ';
 			if (cmdLine[pos] == '\"')
 			{
@@ -75,6 +120,13 @@ namespace Remuxer
 			while (pos < cmdLine.Length && cmdLine[pos] != endingChar)
 				pos++;
 			return cmdLine.Substring(startPos, pos++ - startPos);
+		}
+
+		static void checkPath(string path)
+		{
+			var file = File.Create(path);
+			file.Close();
+			File.Delete(path);
 		}
 }
 

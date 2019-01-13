@@ -23,19 +23,22 @@ namespace Remuxer
 			_args = args;			
 		}
 
-		
 		private async void Form1_Load(object sender, EventArgs e)
 		{
 			if (incorrectFlags)
 				Close();
 			await Task.Run( delegate
 			{
-				LibRemuxer.beginProcessing(_args);
-				float progress = 0;
-				while (progress >= 0)
+				if (!LibRemuxer.beginProcessing(_args))
+					MessageBox.Show($"Couldn't load fIle {_args.inputPath}");
+				else
 				{
-					progressBar1.BeginInvoke(new Action(() => progressBar1.Value = (int)(progress * 100)));
-					progress = LibRemuxer.process();
+					float progress = 0;
+					while (progress >= 0)
+					{
+						progressBar1.BeginInvoke(new Action(() => progressBar1.Value = (int)(progress * 100)));
+						progress = LibRemuxer.process();
+					}
 				}
 			});
 			Close();
