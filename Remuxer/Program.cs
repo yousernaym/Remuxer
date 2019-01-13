@@ -15,50 +15,44 @@ namespace Remuxer
 		/// </summary>
 
 		[STAThread]
-		static void Main()
+		static void Main(string[] cmdLineArgs)
 		{
-			string cmdLine = Environment.CommandLine;
-			//MessageBox.Show(cmdLineArgs);
-			//cmdLine = "test.sid -m \"out put.mid\" -a output.wav";
-			cmdLine = "test.sid -m -a";
-
 			Args args = new Args();
-			if (string.IsNullOrWhiteSpace(cmdLine))
+			if (cmdLineArgs.Length == 0)
 			{
 				showErrorMsg("No arguments specified.");
 				return;
 			}
 
 			bool audioFlag = false, midiFlag = false;
-			int pos = 0;
-			while (pos < cmdLine.Length)
+			for (int i = 0; i < cmdLineArgs.Length; i++)
 			{
-				while (pos < cmdLine.Length && cmdLine[pos] == ' ')
-					pos++;
-				if (cmdLine[pos] == '-' && pos < cmdLine.Length - 1)
+				string arg = cmdLineArgs[i];
+				if (arg.Length >= 2 && arg[0] == '-')
 				{
-					pos++;
-					char flag = cmdLine[pos++];
+					char flag = arg[1];
+					string flagPath = null;
+					if (i + 1 < cmdLineArgs.Length && cmdLineArgs[i + 1][0] != '-') //:No path was specified
+						flagPath = cmdLineArgs[++i];
 					if (flag == 'm')
 					{
 						midiFlag = true;
-						args.midiPath = readCmdLinePath(cmdLine, ref pos);
+						args.midiPath = flagPath;
 					}
 					else if (flag == 'a')
 					{
 						audioFlag = true;
-						args.audioPath = readCmdLinePath(cmdLine, ref pos);
+						args.audioPath = flagPath;
 					}
 					else
 					{
-						showErrorMsg($"Invalid flag -{cmdLine[pos]}");
+						showErrorMsg($"Invalid flag -{flag}");
 						return;
 					}
-
 				}
 				else
 				{
-					args.inputPath = readCmdLinePath(cmdLine, ref pos);
+					args.inputPath = cmdLineArgs[i];
 					if (string.IsNullOrWhiteSpace(args.inputPath))
 					{
 						MessageBox.Show("No input file specified.");
@@ -102,24 +96,6 @@ namespace Remuxer
 		static void showErrorMsg(string msg)
 		{
 			MessageBox.Show(msg);
-		}
-
-		static string readCmdLinePath(string cmdLine, ref int pos)
-		{
-			while (pos < cmdLine.Length && cmdLine[pos] == ' ')
-				pos++;
-			if (pos >= cmdLine.Length || cmdLine[pos] == '-') //:No path was specified
-				return null;
-			char endingChar = ' ';
-			if (cmdLine[pos] == '\"')
-			{
-				endingChar = '\"';
-				pos++;
-			}
-			int startPos = pos;
-			while (pos < cmdLine.Length && cmdLine[pos] != endingChar)
-				pos++;
-			return cmdLine.Substring(startPos, pos++ - startPos);
 		}
 
 		static void checkPath(string path)
