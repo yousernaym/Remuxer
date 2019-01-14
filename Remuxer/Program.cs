@@ -60,11 +60,13 @@ namespace Remuxer
 					}
 				}
 			}
-			if (midiFlag && args.midiPath == null)
+			//Derive output paths from input path if output path is not specified or if no output flags are specified
+			bool noOutputFlags = !midiFlag && !audioFlag;
+			if (noOutputFlags || midiFlag && args.midiPath == null)
 				args.midiPath = Path.ChangeExtension(args.inputPath, "mid");
-			if (audioFlag && args.audioPath == null)
+			if (noOutputFlags || audioFlag && args.audioPath == null)
 				args.audioPath = Path.ChangeExtension(args.inputPath, "wav");
-
+			
 			//Check validity of input path
 			if (!File.Exists(args.inputPath))
 			{
@@ -73,19 +75,18 @@ namespace Remuxer
 			}
 
 			//Check validity of output paths
-			var path = args.midiPath;
 			try
 			{
-				checkPath(path);
-				path = args.audioPath;
-				checkPath(path);
+				if (midiFlag)
+					checkPath(args.midiPath, "-m");
+				if (audioFlag)
+					checkPath(args.audioPath, "-a");
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show($"Invalid path/filename: \"{path}\"\n\n{e.Message}");
-				return;
+				MessageBox.Show(e.Message);
 			}
-		
+
 			LibRemuxer.initLib();
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
@@ -98,12 +99,19 @@ namespace Remuxer
 			MessageBox.Show(msg);
 		}
 
-		static void checkPath(string path)
+	static void checkPath(string path, string flag)
+	{
+		try
 		{
 			var file = File.Create(path);
 			file.Close();
 			File.Delete(path);
 		}
+		catch (Exception)
+		{
+			throw new Exception($"Invalid {flag} path: \"{path}\"");
+		}
+	}
 }
 
 	[StructLayout(LayoutKind.Sequential, Pack = 8)]

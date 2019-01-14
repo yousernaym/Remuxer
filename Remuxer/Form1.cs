@@ -15,7 +15,7 @@ namespace Remuxer
 	public partial class Form1 : Form
 	{
 		Args _args;		
-		bool incorrectFlags = false;
+		readonly object progressLock = new object();
 
 		public Form1(Args args) : base()
 		{
@@ -25,8 +25,6 @@ namespace Remuxer
 
 		private async void Form1_Load(object sender, EventArgs e)
 		{
-			if (incorrectFlags)
-				Close();
 			await Task.Run( delegate
 			{
 				if (!LibRemuxer.beginProcessing(_args))
@@ -34,14 +32,25 @@ namespace Remuxer
 				else
 				{
 					float progress = 0;
-					while (progress >= 0)
-					{
-						progressBar1.BeginInvoke(new Action(() => progressBar1.Value = (int)(progress * 100)));
-						progress = LibRemuxer.process();
+				while (progress >= 0)
+				{
+						progressBar1.BeginInvoke(new Action(
+							delegate
+							{
+								lock (progressLock)
+								{
+									if (progress > 0)
+										progressBar1.Value = (int)(progress * 100);
+								}
+							}));
+						lock(progressLock)
+							progress = LibRemuxer.process();
 					}
 				}
 			});
 			Close();
 		}
+
+
 	}
 }
