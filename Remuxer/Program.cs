@@ -31,18 +31,40 @@ namespace Remuxer
 				if (arg.Length >= 2 && arg[0] == '-')
 				{
 					char flag = arg[1];
-					string flagPath = null;
-					if (i + 1 < cmdLineArgs.Length && cmdLineArgs[i + 1][0] != '-') //:No path was specified
-						flagPath = cmdLineArgs[++i];
+					string flagArg = null;
+
+					//Was an argument relating to this flag specified
+					if (i + 1 < cmdLineArgs.Length && cmdLineArgs[i + 1][0] != '-') 
+						flagArg = cmdLineArgs[++i];
 					if (flag == 'm')
 					{
 						midiFlag = true;
-						args.midiPath = flagPath;
+						args.midiPath = flagArg;
 					}
 					else if (flag == 'a')
 					{
 						audioFlag = true;
-						args.audioPath = flagPath;
+						args.audioPath = flagArg;
+					}
+					else if (flag == 's')
+					{
+						if (!int.TryParse(flagArg, out args.subSong))
+						{
+							MessageBox.Show($"Invalid sub song number: {flagArg}");
+							return;
+						}
+					}
+					else if (flag == 'l')
+					{
+						if (!float.TryParse(flagArg, out args.songLengthS))
+						{
+							MessageBox.Show($"Invalid sub song number: {flagArg}");
+							return;
+						}
+					}
+					else if (flag == 'i')
+					{
+						args.modInsTrack = true;
 					}
 					else
 					{
@@ -60,6 +82,14 @@ namespace Remuxer
 					}
 				}
 			}
+
+			//Check if input file exests
+			if (!File.Exists(args.inputPath))
+			{
+				MessageBox.Show($"Couldn't find or access input file {args.inputPath}");
+				return;
+			}
+
 			//Derive output paths from input path if output path is not specified or if no output flags are specified
 			bool noOutputFlags = !midiFlag && !audioFlag;
 			if (noOutputFlags || midiFlag && args.midiPath == null)
@@ -67,13 +97,6 @@ namespace Remuxer
 			if (noOutputFlags || audioFlag && args.audioPath == null)
 				args.audioPath = Path.ChangeExtension(args.inputPath, "wav");
 			
-			//Check validity of input path
-			if (!File.Exists(args.inputPath))
-			{
-				MessageBox.Show($"Couldn't find or access input file {args.inputPath}");
-				return;
-			}
-
 			//Check validity of output paths
 			try
 			{
