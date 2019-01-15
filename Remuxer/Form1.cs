@@ -26,7 +26,7 @@ namespace Remuxer
 
 		private async void Form1_Load(object sender, EventArgs e)
 		{
-			processLabel.Text = "";
+			processInfo.Text = "";
 			await Task.Run( delegate
 			{
 				if (!LibRemuxer.beginProcessing(ref _args))
@@ -42,12 +42,15 @@ namespace Remuxer
 					}
 					else
 						text += " audio";
-					text += " from";
+					text += $" from {Path.GetFileName(_args.inputPath)}";
+
 					if (_args.numSubSongs > 1)
-						text += $" subsong {_args.subSong}/{_args.numSubSongs} of";
-					else
-						text += $" {Path.GetFileName(_args.inputPath)}";
-					processLabel.BeginInvoke(new Action(()=> processLabel.Text = text));
+						text += $" ({_args.subSong}/{_args.numSubSongs}).";
+					processInfo.BeginInvoke(new Action(
+						delegate
+						{
+							processInfo.Text = text;
+						}));
 
 					float progress = 0;
 					while (progress >= 0)
@@ -72,6 +75,15 @@ namespace Remuxer
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			LibRemuxer.finish();
+		}
+
+		private void processInfo_TextChanged(object sender, EventArgs e)
+		{
+			Size s = TextRenderer.MeasureText(this.processInfo.Text, this.processInfo.Font);
+			int lines = s.Width / processInfo.Width + 1;
+			s.Height *= lines;
+			s.Height += 8;
+			this.processInfo.Height = s.Height;
 		}
 	}
 }
