@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -25,15 +26,32 @@ namespace Remuxer
 
 		private async void Form1_Load(object sender, EventArgs e)
 		{
+			processLabel.Text = "";
 			await Task.Run( delegate
 			{
-				if (!LibRemuxer.beginProcessing(_args))
+				if (!LibRemuxer.beginProcessing(ref _args))
 					MessageBox.Show($"Couldn't load fIle {_args.inputPath}");
 				else
 				{
+					string text = "Extracting";
+					if (_args.midiPath != null)
+					{
+						text += " notes";
+						if (_args.audioPath != null)
+							text += " and audio";
+					}
+					else
+						text += " audio";
+					text += " from";
+					if (_args.numSubSongs > 1)
+						text += $" subsong {_args.subSong}/{_args.numSubSongs} of";
+					else
+						text += $" {Path.GetFileName(_args.inputPath)}";
+					processLabel.BeginInvoke(new Action(()=> processLabel.Text = text));
+
 					float progress = 0;
-				while (progress >= 0)
-				{
+					while (progress >= 0)
+					{
 						progressBar1.BeginInvoke(new Action(
 							delegate
 							{

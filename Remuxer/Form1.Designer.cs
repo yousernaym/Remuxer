@@ -28,18 +28,18 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.progressLabel = new System.Windows.Forms.Label();
+			this.processLabel = new System.Windows.Forms.Label();
 			this.progressBar1 = new System.Windows.Forms.ProgressBar();
 			this.SuspendLayout();
 			// 
-			// progressLabel
+			// processLabel
 			// 
-			this.progressLabel.AutoSize = true;
-			this.progressLabel.Location = new System.Drawing.Point(12, 38);
-			this.progressLabel.Name = "progressLabel";
-			this.progressLabel.Size = new System.Drawing.Size(35, 13);
-			this.progressLabel.TabIndex = 0;
-			this.progressLabel.Text = "label1";
+			this.processLabel.AutoSize = true;
+			this.processLabel.Location = new System.Drawing.Point(12, 38);
+			this.processLabel.Name = "processLabel";
+			this.processLabel.Size = new System.Drawing.Size(35, 13);
+			this.processLabel.TabIndex = 0;
+			this.processLabel.Text = "label1";
 			// 
 			// progressBar1
 			// 
@@ -52,9 +52,9 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(283, 66);
+			this.ClientSize = new System.Drawing.Size(283, 60);
 			this.Controls.Add(this.progressBar1);
-			this.Controls.Add(this.progressLabel);
+			this.Controls.Add(this.processLabel);
 			this.Name = "Form1";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
 			this.Load += new System.EventHandler(this.Form1_Load);
@@ -65,7 +65,7 @@
 
 		#endregion
 
-		private System.Windows.Forms.Label progressLabel;
+		private System.Windows.Forms.Label processLabel;
 		private System.Windows.Forms.ProgressBar progressBar1;
 	}
 }

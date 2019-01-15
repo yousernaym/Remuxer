@@ -146,6 +146,7 @@ namespace Remuxer
 		public bool modInsTrack;
 		public float songLengthS;
 		public int subSong;
+		public int numSubSongs; //out parameter
 	}
 
 
