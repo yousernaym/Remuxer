@@ -27,6 +27,7 @@ namespace Remuxer
 		private async void Form1_Load(object sender, EventArgs e)
 		{
 			processInfo.Text = "";
+			processInfo.ScrollBars = RichTextBoxScrollBars.None;
 			await Task.Run( delegate
 			{
 				if (!LibRemuxer.beginProcessing(ref _args))
@@ -80,7 +81,7 @@ namespace Remuxer
 		private void processInfo_TextChanged(object sender, EventArgs e)
 		{
 			Size s = TextRenderer.MeasureText(this.processInfo.Text, this.processInfo.Font);
-			int lines = s.Width / processInfo.Width + 1;
+			int lines = (s.Width - 2) / processInfo.Width + 1;
 			s.Height *= lines;
 			s.Height += 8;
 			this.processInfo.Height = s.Height;
