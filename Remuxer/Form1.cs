@@ -51,6 +51,9 @@ namespace Remuxer
 			Close();
 		}
 
-
+		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			LibRemuxer.finish();
+		}
 	}
 }
