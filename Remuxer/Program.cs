@@ -34,8 +34,8 @@ namespace Remuxer
 					string flagArg = null;
 
 					//Was an argument relating to this flag specified
-					if (i + 1 < cmdLineArgs.Length && cmdLineArgs[i + 1][0] != '-') 
-						flagArg = cmdLineArgs[++i];
+					if (arg.Length > 2)
+						flagArg = arg.Substring(2);
 					if (flag == 'm')
 					{
 						midiFlag = true;
@@ -48,18 +48,24 @@ namespace Remuxer
 					}
 					else if (flag == 's')
 					{
-						if (!int.TryParse(flagArg, out args.subSong))
+						if (flagArg != null)
 						{
-							showUsage($"Invalid subsong argument: {flagArg}");
-							return;
+							if (!int.TryParse(flagArg, out args.subSong))
+							{
+								showUsage($"Invalid -s argument: {flagArg}");
+								return;
+							}
 						}
 					}
-					else if (flag == 'l')
+					else if (flag == 'l' && flagArg != null)
 					{
-						if (!float.TryParse(flagArg, out args.songLengthS))
+						if (flagArg != null)
 						{
-							showUsage($"Invalid song length argument: {flagArg}");
-							return;
+							if (!float.TryParse(flagArg, out args.songLengthS))
+							{
+								showUsage($"Invalid -l argument: {flagArg}");
+								return;
+							}
 						}
 					}
 					else if (flag == 'i')
@@ -68,7 +74,7 @@ namespace Remuxer
 					}
 					else
 					{
-						showError($"Invalid flag -{flag}");
+						showUsage($"Invalid flag -{flag}.");
 						return;
 					}
 				}
@@ -86,7 +92,7 @@ namespace Remuxer
 			//Check if input file exests
 			if (!File.Exists(args.inputPath))
 			{
-				showError($"Couldn't find/access input file {args.inputPath}");
+				showError($"Couldn't find input file {args.inputPath}");
 				return;
 			}
 
@@ -107,7 +113,8 @@ namespace Remuxer
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show(e.Message);
+				showError(e.Message);
+				return;
 			}
 
 			LibRemuxer.initLib();
@@ -137,33 +144,30 @@ namespace Remuxer
 			string usage = errorMsg;
 			if (usage != null)
 			{
-				usage += "\n\n";
+				usage = "Error: " + errorMsg + "\n\n";
 				mbIcon = MessageBoxIcon.Error;
 			}
 
-			usage += "Syntax: remuxer <input file> [-<flag> ...]\n\n";
+			usage += "Syntax: remuxer <input file> [-<flag>[argument]]\n\n";
 			usage += "Flags:\n";
-			usage += "-a [wav output file]  default = <input file>.wav\n";
-			usage += "-m [midi output file]  default = <input file>.mid\n";
+			usage += "-a[wav output file]      default = <input file>.wav\n";
+			usage += "-m[midi output file]      default = <input file>.mid\n";
 			usage += "\n";
 			usage += "Sid-specific:\n";
-			usage += "-s <subsong number>\n";
-			usage += "-l <length of song>\n";
+			usage += "-s<subsong number>\n";
+			usage += "-l<length of song>\n";
 			usage += "\n";
 			usage += "Mod-specific:\n";
 			usage += "-i One track per instrument instead of one per channel.\n";
 			usage += "\n";
 			usage += "If both -a and -m are ommitted, both are set implicitly.";
-			//usage += "Examples:\n";
-			//usage += "remuxer mysong.sid  ->  outputs mysong.wav and mysong.mid from the default subsong specified in the sid file";
-			//usage += "remuxer mysong.sid -m mymid.mid -a -s 2 -l 100  ->  outputs mymid.mid and mysong.wav from subsong 2 with a length of 100 seconds";
-
+		
 			MessageBox.Show(usage, "", MessageBoxButtons.OK, mbIcon);
 		}
 
 		static void showError(string errorMsg)
 		{
-			MessageBox.Show(errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show("Error: " + errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 
 	}
