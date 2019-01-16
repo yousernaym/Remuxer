@@ -15,8 +15,9 @@ namespace Remuxer
 {
 	public partial class Form1 : Form
 	{
-		Args _args;		
-		readonly object progressLock = new object();
+		Args _args;	
+		readonly object _progressLock = new object();
+		bool _validFile = false;
 
 		public Form1(Args args) : base()
 		{
@@ -31,9 +32,10 @@ namespace Remuxer
 			await Task.Run( delegate
 			{
 				if (!LibRemuxer.beginProcessing(ref _args))
-					MessageBox.Show($"Couldn't load fIle {_args.inputPath}");
+					Program.showError($"Unrecognized format of input file \"{_args.inputPath}\".");
 				else
 				{
+					_validFile = true;
 					string text = "Extracting";
 					if (_args.midiPath != null)
 					{
@@ -59,13 +61,13 @@ namespace Remuxer
 						progressBar1.BeginInvoke(new Action(
 							delegate
 							{
-								lock (progressLock)
+								lock (_progressLock)
 								{
 									if (progress > 0)
 										progressBar1.Value = (int)(progress * 100);
 								}
 							}));
-						lock(progressLock)
+						lock(_progressLock)
 							progress = LibRemuxer.process();
 					}
 				}
@@ -75,7 +77,8 @@ namespace Remuxer
 
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			LibRemuxer.finish();
+			if (_validFile)
+				LibRemuxer.finish();
 		}
 
 		private void processInfo_TextChanged(object sender, EventArgs e)

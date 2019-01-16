@@ -46,7 +46,7 @@
 			this.processInfo.ReadOnly = true;
 			this.processInfo.Size = new System.Drawing.Size(259, 18);
 			this.processInfo.TabIndex = 4;
-			this.processInfo.Text = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+			this.processInfo.Text = "";
 			this.processInfo.TextChanged += new System.EventHandler(this.processInfo_TextChanged);
 			// 
 			// Form1

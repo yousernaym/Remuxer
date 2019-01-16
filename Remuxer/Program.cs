@@ -52,18 +52,18 @@ namespace Remuxer
 						{
 							if (!int.TryParse(flagArg, out args.subSong))
 							{
-								showUsage($"Invalid -s argument: {flagArg}");
+								showUsage($"Invalid -s argument \"{flagArg}\".");
 								return;
 							}
 						}
 					}
-					else if (flag == 'l' && flagArg != null)
+					else if (flag == 'l')
 					{
 						if (flagArg != null)
 						{
 							if (!float.TryParse(flagArg, out args.songLengthS))
 							{
-								showUsage($"Invalid -l argument: {flagArg}");
+								showUsage($"Invalid -l argument \"{flagArg}\".");
 								return;
 							}
 						}
@@ -92,7 +92,7 @@ namespace Remuxer
 			//Check if input file exests
 			if (!File.Exists(args.inputPath))
 			{
-				showError($"Couldn't find input file {args.inputPath}");
+				showError($"Couldn't find input file \"{args.inputPath}\".");
 				return;
 			}
 
@@ -134,7 +134,7 @@ namespace Remuxer
 			}
 			catch (Exception)
 			{
-				throw new Exception($"Invalid {flag} path: \"{path}\"");
+				throw new Exception($"Invalid {flag} path \"{path}\".");
 			}
 		}
 	
@@ -165,7 +165,7 @@ namespace Remuxer
 			MessageBox.Show(usage, "", MessageBoxButtons.OK, mbIcon);
 		}
 
-		static void showError(string errorMsg)
+		public static void showError(string errorMsg)
 		{
 			MessageBox.Show("Error: " + errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
