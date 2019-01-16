@@ -29,32 +29,29 @@ namespace Remuxer
 		{
 			processInfo.Text = "";
 			processInfo.ScrollBars = RichTextBoxScrollBars.None;
-			await Task.Run( delegate
+			
+			if (!LibRemuxer.beginProcessing(ref _args))
+				Program.showError($"Unrecognized format of input file \"{_args.inputPath}\".");
+			else
 			{
-				if (!LibRemuxer.beginProcessing(ref _args))
-					Program.showError($"Unrecognized format of input file \"{_args.inputPath}\".");
-				else
+				_validFile = true;
+				string text = "Extracting";
+				if (_args.midiPath != null)
 				{
-					_validFile = true;
-					string text = "Extracting";
-					if (_args.midiPath != null)
-					{
-						text += " notes";
-						if (_args.audioPath != null)
-							text += " and audio";
-					}
-					else
-						text += " audio";
-					text += $" from {Path.GetFileName(_args.inputPath)}";
+					text += " notes";
+					if (_args.audioPath != null)
+						text += " and audio";
+				}
+				else
+					text += " audio";
+				text += $" from {Path.GetFileName(_args.inputPath)}";
 
-					if (_args.numSubSongs > 1)
-						text += $" ({_args.subSong}/{_args.numSubSongs}).";
-					processInfo.BeginInvoke(new Action(
-						delegate
-						{
-							processInfo.Text = text;
-						}));
+				if (_args.numSubSongs > 1)
+					text += $" ({_args.subSong}/{_args.numSubSongs}).";
+				processInfo.Text = text;
 
+				await Task.Run(delegate
+				{
 					float progress = 0;
 					while (progress >= 0)
 					{
@@ -67,11 +64,11 @@ namespace Remuxer
 										progressBar1.Value = (int)(progress * 100);
 								}
 							}));
-						lock(_progressLock)
+						lock (_progressLock)
 							progress = LibRemuxer.process();
 					}
-				}
-			});
+				});
+			}
 			Close();
 		}
 
