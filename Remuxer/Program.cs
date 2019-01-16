@@ -20,7 +20,7 @@ namespace Remuxer
 			Args args = new Args();
 			if (cmdLineArgs.Length == 0)
 			{
-				showErrorMsg("No arguments specified.");
+				showUsage();
 				return;
 			}
 
@@ -50,7 +50,7 @@ namespace Remuxer
 					{
 						if (!int.TryParse(flagArg, out args.subSong))
 						{
-							MessageBox.Show($"Invalid sub song number: {flagArg}");
+							showUsage($"Invalid subsong argument: {flagArg}");
 							return;
 						}
 					}
@@ -58,7 +58,7 @@ namespace Remuxer
 					{
 						if (!float.TryParse(flagArg, out args.songLengthS))
 						{
-							MessageBox.Show($"Invalid sub song number: {flagArg}");
+							showUsage($"Invalid song length argument: {flagArg}");
 							return;
 						}
 					}
@@ -68,7 +68,7 @@ namespace Remuxer
 					}
 					else
 					{
-						showErrorMsg($"Invalid flag -{flag}");
+						showError($"Invalid flag -{flag}");
 						return;
 					}
 				}
@@ -77,7 +77,7 @@ namespace Remuxer
 					args.inputPath = cmdLineArgs[i];
 					if (string.IsNullOrWhiteSpace(args.inputPath))
 					{
-						MessageBox.Show("No input file specified.");
+						showUsage("No input file specified.");
 						return;
 					}
 				}
@@ -86,7 +86,7 @@ namespace Remuxer
 			//Check if input file exests
 			if (!File.Exists(args.inputPath))
 			{
-				MessageBox.Show($"Couldn't find or access input file {args.inputPath}");
+				showError($"Couldn't find/access input file {args.inputPath}");
 				return;
 			}
 
@@ -117,25 +117,56 @@ namespace Remuxer
 			LibRemuxer.closeLib();
 		}
 
-		static void showErrorMsg(string msg)
+		static void checkPath(string path, string flag)
 		{
-			MessageBox.Show(msg);
+			try
+			{
+				var file = File.Create(path);
+				file.Close();
+				File.Delete(path);
+			}
+			catch (Exception)
+			{
+				throw new Exception($"Invalid {flag} path: \"{path}\"");
+			}
+		}
+	
+		static void showUsage(string errorMsg = null)
+		{
+			MessageBoxIcon mbIcon = MessageBoxIcon.Information;
+			string usage = errorMsg;
+			if (usage != null)
+			{
+				usage += "\n\n";
+				mbIcon = MessageBoxIcon.Error;
+			}
+
+			usage += "Syntax: remuxer <input file> [-<flag> ...]\n\n";
+			usage += "Flags:\n";
+			usage += "-a [wav output file]  default = <input file>.wav\n";
+			usage += "-m [midi output file]  default = <input file>.mid\n";
+			usage += "\n";
+			usage += "Sid-specific:\n";
+			usage += "-s <subsong number>\n";
+			usage += "-l <length of song>\n";
+			usage += "\n";
+			usage += "Mod-specific:\n";
+			usage += "-i One track per instrument instead of one per channel.\n";
+			usage += "\n";
+			usage += "If both -a and -m are ommitted, both are set implicitly.";
+			//usage += "Examples:\n";
+			//usage += "remuxer mysong.sid  ->  outputs mysong.wav and mysong.mid from the default subsong specified in the sid file";
+			//usage += "remuxer mysong.sid -m mymid.mid -a -s 2 -l 100  ->  outputs mymid.mid and mysong.wav from subsong 2 with a length of 100 seconds";
+
+			MessageBox.Show(usage, "", MessageBoxButtons.OK, mbIcon);
 		}
 
-	static void checkPath(string path, string flag)
-	{
-		try
+		static void showError(string errorMsg)
 		{
-			var file = File.Create(path);
-			file.Close();
-			File.Delete(path);
+			MessageBox.Show(errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
-		catch (Exception)
-		{
-			throw new Exception($"Invalid {flag} path: \"{path}\"");
-		}
+
 	}
-}
 
 	[StructLayout(LayoutKind.Sequential, Pack = 8)]
 	public struct Args
