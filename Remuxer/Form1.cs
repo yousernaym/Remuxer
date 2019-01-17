@@ -86,5 +86,11 @@ namespace Remuxer
 			s.Height += 8;
 			this.processInfo.Height = s.Height;
 		}
+
+		private void Form1_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Escape)
+				Close();
+		}
 	}
 }

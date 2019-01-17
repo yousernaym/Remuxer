@@ -58,9 +58,11 @@
 			this.ClientSize = new System.Drawing.Size(283, 87);
 			this.Controls.Add(this.processInfo);
 			this.Controls.Add(this.progressBar1);
+			this.KeyPreview = true;
 			this.Name = "Form1";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
 			this.Load += new System.EventHandler(this.Form1_Load);
+			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
 			this.ResumeLayout(false);
 
 		}

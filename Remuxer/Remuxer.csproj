@@ -117,8 +117,8 @@
   <PropertyGroup>
     <PostBuildEvent>set platform=x64
 if $(PlatformName) == x86 set platform=win32
-xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\*.dll" "$(TargetDir)" /D /Y
-xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\*.pdb" "$(TargetDir)" /D /Y
+xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\remuxer\*.dll" "$(TargetDir)" /D /Y
+xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\remuxer\*.pdb" "$(TargetDir)" /D /Y
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
