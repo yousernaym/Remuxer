@@ -33,7 +33,7 @@ namespace Remuxer
 					char flag = arg[1];
 					string flagArg = null;
 
-					//Was an argument relating to this flag specified
+					//Was an argument relating to this flag specified?
 					if (arg.Length > 2)
 						flagArg = arg.Substring(2);
 					if (flag == 'm')
@@ -152,13 +152,11 @@ namespace Remuxer
 			usage += "Flags:\n";
 			usage += "-a[wav output file]      default = <input file>.wav\n";
 			usage += "-m[midi output file]      default = <input file>.mid\n";
+			usage += "-i One track per instrument instead of one per channel.\n";
 			usage += "\n";
 			usage += "Sid-specific:\n";
 			usage += "-s<subsong number>\n";
 			usage += "-l<length of song>\n";
-			usage += "\n";
-			usage += "Mod-specific:\n";
-			usage += "-i One track per instrument instead of one per channel.\n";
 			usage += "\n";
 			usage += "If both -a and -m are ommitted, both are set implicitly.";
 		
