@@ -16,7 +16,6 @@ namespace Remuxer
 	public partial class Form1 : Form
 	{
 		Args _args;	
-		readonly object _progressLock = new object();
 		bool _validFile = false;
 
 		public Form1(Args args) : base()
@@ -55,17 +54,13 @@ namespace Remuxer
 					float progress = 0;
 					while (progress >= 0)
 					{
-						progressBar1.BeginInvoke(new Action(
+						progressBar1.Invoke(new Action(
 							delegate
 							{
-								lock (_progressLock)
-								{
-									if (progress > 0)
-										progressBar1.Value = (int)(progress * 100);
-								}
+								if (progress > 0)
+									progressBar1.Value = (int)(progress * 100);
 							}));
-						lock (_progressLock)
-							progress = LibRemuxer.process();
+						progress = LibRemuxer.process();
 					}
 				});
 			}
