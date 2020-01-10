@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,7 +25,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -115,10 +115,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>set platform=x64
-if $(PlatformName) == x86 set platform=win32
-xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\remuxer\*.dll" "$(TargetDir)" /D /Y
-xcopy "$(SolutionDir)%25platform%25\$(ConfigurationName)\remuxer\*.pdb" "$(TargetDir)" /D /Y
+    <PostBuildEvent>xcopy "$(SolutionDir)x64\$(ConfigurationName)\remuxer" "$(TargetDir)" /D /Y /I /E /S
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
