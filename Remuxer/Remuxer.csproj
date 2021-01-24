@@ -116,7 +116,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)x64\$(ConfigurationName)\remuxer" "$(TargetDir)" /D /Y /I /E /S
+    <PostBuildEvent>xcopy "$(SolutionDir)x64\$(ConfigurationName)\remuxer" "$(TargetDir)" /D /Y /I /S
+xcopy "$(ProjectDir)..\libRemuxer\roms" "$(TargetDir)roms" /D /Y /S /I
 xcopy "$(TargetPath)" "$(SolutionDir)x64\$(ConfigurationName)\remuxer"  /D /Y
 </PostBuildEvent>
   </PropertyGroup>
