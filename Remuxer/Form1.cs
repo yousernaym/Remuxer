@@ -15,38 +15,37 @@ namespace Remuxer
 {
 	public partial class Form1 : Form
 	{
-		Args _args;	
-		bool _validFile = false;
+		Args args;	
+		bool validFile = false;
 
 		public Form1(Args args) : base()
 		{
 			InitializeComponent();
-			_args = args;			
+			this.args = args;			
 		}
 
 		private async void Form1_Load(object sender, EventArgs e)
 		{
 			processInfo.Text = "";
 			processInfo.ScrollBars = RichTextBoxScrollBars.None;
-			
-			if (!LibRemuxer.beginProcessing(ref _args))
-				Program.showError($"Unrecognized format of input file \"{_args.inputPath}\".");
+			if (!LibRemuxer.beginProcessing(ref args))
+				Program.showError($"Unrecognized format of input file \"{args.inputPath}\".");
 			else
 			{
-				_validFile = true;
+				validFile = true;
 				string text = "Extracting";
-				if (_args.midiPath != null)
+				if (args.midiPath != null)
 				{
 					text += " notes";
-					if (_args.audioPath != null)
+					if (args.audioPath != null)
 						text += " and audio";
 				}
 				else
 					text += " audio";
-				text += $" from {Path.GetFileName(_args.inputPath)}";
+				text += $" from {Path.GetFileName(args.inputPath)}";
 
-				if (_args.numSubSongs > 1)
-					text += $" ({_args.subSong}/{_args.numSubSongs}).";
+				if (args.numSubSongs > 1)
+					text += $" ({args.subSong}/{args.numSubSongs}).";
 				processInfo.Text = text;
 
 				await Task.Run(delegate
@@ -69,7 +68,7 @@ namespace Remuxer
 
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			if (_validFile)
+			if (validFile)
 				LibRemuxer.finish();
 		}
 
