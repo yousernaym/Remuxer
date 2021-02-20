@@ -29,7 +29,11 @@ namespace Remuxer
 			processInfo.Text = "";
 			processInfo.ScrollBars = RichTextBoxScrollBars.None;
 			if (!LibRemuxer.beginProcessing(ref args))
-				Program.showError($"Unrecognized format of input file \"{args.inputPath}\".");
+			{
+				if (!args.suppressErrors)
+					Program.showError($"Unrecognized format of input file \"{args.inputPath}\".");
+				Environment.Exit(1);
+			}
 			else
 			{
 				validFile = true;

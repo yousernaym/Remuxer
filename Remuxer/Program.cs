@@ -13,7 +13,6 @@ namespace Remuxer
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
-
 		[STAThread]
 		static void Main(string[] cmdLineArgs)
 		{
@@ -36,17 +35,17 @@ namespace Remuxer
 					//Was an argument relating to this flag specified?
 					if (arg.Length > 2)
 						flagArg = arg.Substring(2);
-					if (flag == 'm')
+					if (flag == 'm') //Midi output
 					{
 						midiFlag = true;
 						args.midiPath = flagArg;
 					}
-					else if (flag == 'a')
+					else if (flag == 'a') //Audio output
 					{
 						audioFlag = true;
 						args.audioPath = flagArg;
 					}
-					else if (flag == 's')
+					else if (flag == 's') //Sub song
 					{
 						if (flagArg != null)
 						{
@@ -57,7 +56,7 @@ namespace Remuxer
 							}
 						}
 					}
-					else if (flag == 'l')
+					else if (flag == 'l') //Song lenght
 					{
 						if (flagArg != null)
 						{
@@ -68,9 +67,13 @@ namespace Remuxer
 							}
 						}
 					}
-					else if (flag == 'i')
+					else if (flag == 'i') //Input note file
 					{
 						args.modInsTrack = true;
+					}
+					else if (flag == 'e') //Suppress conversion errors
+					{
+						args.suppressErrors = true;
 					}
 					else
 					{
@@ -180,6 +183,7 @@ namespace Remuxer
 		public float songLengthS;
 		public int subSong;
 		public int numSubSongs; //out parameter
+		public bool suppressErrors;
 	}
 
 
