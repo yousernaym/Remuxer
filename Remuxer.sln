@@ -22,8 +22,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libRemuxer", "libRemuxer\li
 		{9C5101EF-3E20-4558-809B-277FDD50E878} = {9C5101EF-3E20-4558-809B-277FDD50E878}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmikmod", "libRemuxer\libmikmod\win32\VS2005\libmikmod.vcxproj", "{C118ACA9-74E7-4433-8433-452B33A77716}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5EF8584D-6A4D-4020-B241-C557E39CE661}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
@@ -36,6 +34,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vorbis", "libRemuxer\openmpt\build\vs2019win10\ext\vorbis.vcxproj", "{B544DCB7-16E5-41BC-B51B-7EAD8CFDFA05}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpg123", "libRemuxer\openmpt\build\vs2019win10\ext\mpg123.vcxproj", "{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmikmod", "libRemuxer\mikmod\libmikmod\win32\VS2005\libmikmod.vcxproj", "{C118ACA9-74E7-4433-8433-452B33A77716}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,22 +87,6 @@ Global
 		{EBEBED4A-5B1A-4EB2-85FE-6E73C88B50DE}.Release|x64.Build.0 = Release|x64
 		{EBEBED4A-5B1A-4EB2-85FE-6E73C88B50DE}.Release|x86.ActiveCfg = Release|Win32
 		{EBEBED4A-5B1A-4EB2-85FE-6E73C88B50DE}.Release|x86.Build.0 = Release|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|Any CPU.Build.0 = Debug|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|ARM.ActiveCfg = Debug|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x64.ActiveCfg = Debug|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x64.Build.0 = Debug|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x86.ActiveCfg = Debug|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x86.Build.0 = Debug|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|Any CPU.ActiveCfg = Release|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|Any CPU.Build.0 = Release|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|ARM.ActiveCfg = Release|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|ARM64.ActiveCfg = Release|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x64.ActiveCfg = Release|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x64.Build.0 = Release|x64
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x86.ActiveCfg = Release|Win32
-		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x86.Build.0 = Release|Win32
 		{9C5101EF-3E20-4558-809B-277FDD50E878}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{9C5101EF-3E20-4558-809B-277FDD50E878}.Debug|Any CPU.Build.0 = Debug|x64
 		{9C5101EF-3E20-4558-809B-277FDD50E878}.Debug|ARM.ActiveCfg = Debug|ARM
@@ -183,6 +167,22 @@ Global
 		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}.Release|x64.Build.0 = Release|x64
 		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}.Release|x86.ActiveCfg = Release|Win32
 		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}.Release|x86.Build.0 = Release|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|Any CPU.Build.0 = Debug|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|ARM.ActiveCfg = Debug|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x64.ActiveCfg = Debug|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x64.Build.0 = Debug|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x86.ActiveCfg = Debug|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Debug|x86.Build.0 = Debug|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|Any CPU.ActiveCfg = Release|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|Any CPU.Build.0 = Release|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|ARM.ActiveCfg = Release|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|ARM64.ActiveCfg = Release|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x64.ActiveCfg = Release|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x64.Build.0 = Release|x64
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x86.ActiveCfg = Release|Win32
+		{C118ACA9-74E7-4433-8433-452B33A77716}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
