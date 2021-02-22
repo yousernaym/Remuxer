@@ -31,7 +31,7 @@ namespace Remuxer
 			if (!LibRemuxer.beginProcessing(ref args))
 			{
 				if (!args.suppressErrors)
-					Program.showError($"Unrecognized format of input file \"{args.inputPath}\".");
+					Program.showError($"Couldn't parse input file \"{args.inputPath}\".");
 				Environment.Exit(1);
 			}
 			else

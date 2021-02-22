@@ -168,7 +168,7 @@ namespace Remuxer
 
 		public static void showError(string errorMsg)
 		{
-			MessageBox.Show("Error: " + errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show(errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
 
 	}
@@ -185,6 +185,4 @@ namespace Remuxer
 		public int numSubSongs; //out parameter
 		public bool suppressErrors;
 	}
-
-
 }
