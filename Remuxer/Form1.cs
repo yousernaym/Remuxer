@@ -73,7 +73,7 @@ namespace Remuxer
 		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			if (validFile)
-				LibRemuxer.finish();
+				LibRemuxer.endProcessing();
 		}
 
 		private void processInfo_TextChanged(object sender, EventArgs e)
