@@ -120,11 +120,17 @@ namespace Remuxer
 				return;
 			}
 
-			LibRemuxer.initLib();
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new Form1(args));
-			LibRemuxer.closeLib();
+			try
+			{
+				LibRemuxer.initLib();
+				Application.EnableVisualStyles();
+				Application.SetCompatibleTextRenderingDefault(false);
+				Application.Run(new Form1(args));
+			}
+			finally
+			{
+				LibRemuxer.closeLib();
+			}
 		}
 
 		static void checkPath(string path, string flag)
