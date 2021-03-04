@@ -60,8 +60,10 @@ namespace Remuxer
 						progressBar1.Invoke(new Action(
 							delegate
 							{
+								int percent = (int)(progress * 100);
 								if (progress > 0)
-									progressBar1.Value = (int)(progress * 100);
+									progressBar1.Value = percent;
+								Text = percent.ToString() + "%";
 							}));
 						progress = LibRemuxer.process();
 					}

@@ -28,36 +28,30 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.progressBar1 = new System.Windows.Forms.ProgressBar();
 			this.processInfo = new System.Windows.Forms.RichTextBox();
 			this.SuspendLayout();
 			// 
 			// progressBar1
 			// 
-			this.progressBar1.Location = new System.Drawing.Point(12, 12);
+			resources.ApplyResources(this.progressBar1, "progressBar1");
 			this.progressBar1.Name = "progressBar1";
-			this.progressBar1.Size = new System.Drawing.Size(259, 23);
-			this.progressBar1.TabIndex = 2;
 			// 
 			// processInfo
 			// 
-			this.processInfo.Location = new System.Drawing.Point(12, 41);
+			resources.ApplyResources(this.processInfo, "processInfo");
 			this.processInfo.Name = "processInfo";
 			this.processInfo.ReadOnly = true;
-			this.processInfo.Size = new System.Drawing.Size(259, 18);
-			this.processInfo.TabIndex = 4;
-			this.processInfo.Text = "";
 			this.processInfo.TextChanged += new System.EventHandler(this.processInfo_TextChanged);
 			// 
 			// Form1
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			resources.ApplyResources(this, "$this");
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.AutoSize = true;
-			this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-			this.ClientSize = new System.Drawing.Size(283, 87);
 			this.Controls.Add(this.processInfo);
 			this.Controls.Add(this.progressBar1);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.KeyPreview = true;
 			this.MaximizeBox = false;
 			this.Name = "Form1";
