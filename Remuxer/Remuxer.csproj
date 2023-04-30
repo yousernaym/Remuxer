@@ -116,9 +116,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)x64\$(ConfigurationName)\remuxer" "$(TargetDir)" /D /Y /I /S
-xcopy "$(ProjectDir)..\libRemuxer\roms" "$(TargetDir)roms" /D /Y /S /I
-xcopy "$(TargetPath)" "$(SolutionDir)x64\$(ConfigurationName)\remuxer"  /D /Y
-</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(ProjectDir)..\libRemuxer\roms" "$(TargetDir)roms" /D /Y /S /I
+xcopy "$(ProjectDir)..\libRemuxer\x64\$(ConfigurationName)\*.dll" "$(TargetDir)" /D /YI
+xcopy "$(ProjectDir)..\libRemuxer\x64\$(ConfigurationName)\*.pdb" "$(TargetDir)" /D /YI
+xcopy "$(ProjectDir)..\libRemuxer\openmpt\bin\$(ConfigurationName)\vs2022-win10-static\amd64\*.dll"  "$(TargetDir)" /D /Y
+xcopy "$(ProjectDir)..\libRemuxer\mikmod\libmikmod\win32\vs2005\x64\$(ConfigurationName)\*.dll"  "$(TargetDir)" /D /Y</PostBuildEvent>
   </PropertyGroup>
 </Project>
