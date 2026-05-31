@@ -160,9 +160,9 @@ namespace Remuxer
             usage += "-m[midi output file]      default = <input file>.mid\n";
             usage += "-i One track per instrument instead of one per channel.\n";
             usage += "\n";
-            usage += "Sid-specific:\n";
+            usage += "Sid/Hvl-specific:\n";
             usage += "-s<subsong number>\n";
-            usage += "-l<length of song>\n";
+            usage += "-l<length of song> (Sid only)\n";
             usage += "\n";
             usage += "If both -a and -m are ommitted, both are set implicitly.";
 
