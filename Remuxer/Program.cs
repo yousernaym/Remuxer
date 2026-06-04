@@ -16,7 +16,7 @@ namespace Remuxer
             Args args = new Args();
             if (cmdLineArgs.Length == 0)
             {
-                showUsage();
+                ShowUsage();
                 return;
             }
 
@@ -48,7 +48,7 @@ namespace Remuxer
                         {
                             if (!int.TryParse(flagArg, out args.subSong))
                             {
-                                showUsage($"Invalid -s argument \"{flagArg}\".");
+                                ShowUsage($"Invalid -s argument \"{flagArg}\".");
                                 return;
                             }
                         }
@@ -59,7 +59,7 @@ namespace Remuxer
                         {
                             if (!float.TryParse(flagArg, out args.songLengthS))
                             {
-                                showUsage($"Invalid -l argument \"{flagArg}\".");
+                                ShowUsage($"Invalid -l argument \"{flagArg}\".");
                                 return;
                             }
                         }
@@ -74,7 +74,7 @@ namespace Remuxer
                     }
                     else
                     {
-                        showUsage($"Invalid flag -{flag}.");
+                        ShowUsage($"Invalid flag -{flag}.");
                         return;
                     }
                 }
@@ -83,7 +83,7 @@ namespace Remuxer
                     args.inputPath = cmdLineArgs[i];
                     if (string.IsNullOrWhiteSpace(args.inputPath))
                     {
-                        showUsage("No input file specified.");
+                        ShowUsage("No input file specified.");
                         return;
                     }
                 }
@@ -92,7 +92,7 @@ namespace Remuxer
             //Check if input file exests
             if (!File.Exists(args.inputPath))
             {
-                showError($"Couldn't find input file \"{args.inputPath}\".");
+                ShowError($"Couldn't find input file \"{args.inputPath}\".");
                 return;
             }
 
@@ -107,30 +107,30 @@ namespace Remuxer
             try
             {
                 if (midiFlag)
-                    checkPath(args.midiPath, "-m");
+                    CheckPath(args.midiPath, "-m");
                 if (audioFlag)
-                    checkPath(args.audioPath, "-a");
+                    CheckPath(args.audioPath, "-a");
             }
             catch (Exception e)
             {
-                showError(e.Message);
+                ShowError(e.Message);
                 return;
             }
 
             try
             {
-                LibRemuxer.initLib();
+                LibRemuxer.InitLib();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new Form1(args));
             }
             finally
             {
-                LibRemuxer.closeLib();
+                LibRemuxer.CloseLib();
             }
         }
 
-        static void checkPath(string path, string flag)
+        static void CheckPath(string path, string flag)
         {
             try
             {
@@ -144,7 +144,7 @@ namespace Remuxer
             }
         }
 
-        static void showUsage(string errorMsg = null)
+        static void ShowUsage(string errorMsg = null)
         {
             MessageBoxIcon mbIcon = MessageBoxIcon.Information;
             string usage = errorMsg;
@@ -169,7 +169,7 @@ namespace Remuxer
             MessageBox.Show(usage, "", MessageBoxButtons.OK, mbIcon);
         }
 
-        public static void showError(string errorMsg)
+        public static void ShowError(string errorMsg)
         {
             MessageBox.Show(errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

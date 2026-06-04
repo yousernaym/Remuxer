@@ -43,7 +43,7 @@
 			resources.ApplyResources(this.processInfo, "processInfo");
 			this.processInfo.Name = "processInfo";
 			this.processInfo.ReadOnly = true;
-			this.processInfo.TextChanged += new System.EventHandler(this.processInfo_TextChanged);
+			this.processInfo.TextChanged += new System.EventHandler(this.ProcessInfo_TextChanged);
 			// 
 			// Form1
 			// 

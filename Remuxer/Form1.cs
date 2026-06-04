@@ -8,41 +8,41 @@ namespace Remuxer
 {
     public partial class Form1 : Form
     {
-        Args args;
-        bool validFile = false;
+        Args _args;
+        bool _validFile = false;
 
         public Form1(Args args) : base()
         {
             InitializeComponent();
-            this.args = args;
+            this._args = args;
         }
 
         private async void Form1_Load(object sender, EventArgs e)
         {
             processInfo.Text = "";
             processInfo.ScrollBars = RichTextBoxScrollBars.None;
-            if (!LibRemuxer.beginProcessing(ref args))
+            if (!LibRemuxer.BeginProcessing(ref _args))
             {
-                if (!args.suppressErrors)
-                    Program.showError($"Couldn't parse input file \"{args.inputPath}\".");
+                if (!_args.suppressErrors)
+                    Program.ShowError($"Couldn't parse input file \"{_args.inputPath}\".");
                 Environment.Exit(1);
             }
             else
             {
-                validFile = true;
+                _validFile = true;
                 string text = "Extracting";
-                if (args.midiPath != null)
+                if (_args.midiPath != null)
                 {
                     text += " notes";
-                    if (args.audioPath != null)
+                    if (_args.audioPath != null)
                         text += " and audio";
                 }
                 else
                     text += " audio";
-                text += $" from {Path.GetFileName(args.inputPath)}";
+                text += $" from {Path.GetFileName(_args.inputPath)}";
 
-                if (args.numSubSongs > 1)
-                    text += $" ({args.subSong}/{args.numSubSongs}).";
+                if (_args.numSubSongs > 1)
+                    text += $" ({_args.subSong}/{_args.numSubSongs}).";
                 processInfo.Text = text;
 
                 await Task.Run(delegate
@@ -58,7 +58,7 @@ namespace Remuxer
                                     progressBar1.Value = percent;
                                 Text = percent.ToString() + "%";
                             }));
-                        progress = LibRemuxer.process();
+                        progress = LibRemuxer.Process();
                     }
                 });
             }
@@ -67,11 +67,11 @@ namespace Remuxer
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (validFile)
-                LibRemuxer.endProcessing();
+            if (_validFile)
+                LibRemuxer.EndProcessing();
         }
 
-        private void processInfo_TextChanged(object sender, EventArgs e)
+        private void ProcessInfo_TextChanged(object sender, EventArgs e)
         {
             Size s = TextRenderer.MeasureText(this.processInfo.Text, this.processInfo.Font);
             int lines = (s.Width - 2) / processInfo.Width + 1;
