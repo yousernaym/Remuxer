@@ -20,8 +20,9 @@ because the MonoGame and libsidplayfp licenses conflict. The launch site is
    ([Remuxer/LibRemuxer.cs](Remuxer/LibRemuxer.cs): `initLib`, `beginProcessing(ref Args)`, `process`,
    `endProcessing`, `closeLib`).
 2. **libRemuxer/** (nested submodule) — the native C++ engine wrapping the vendored format libraries
-   **libsidplayfp**, **libmikmod**, and **libopenmpt** (which in turn pull in mpg123/ogg/vorbis). All of these
-   are included as projects in the repo-root `VisualMusic.sln`.
+   **libsidplayfp** and **libopenmpt** (which in turn pull in mpg123/ogg/vorbis). libopenmpt handles both
+   tracker-module note extraction and audio rendering. All of these are included as projects in the
+   repo-root `VisualMusic.sln`.
 
 ## CLI contract
 
@@ -39,8 +40,8 @@ the app can prompt the user to pick a SID sub-song.
 
 - Solution: [Remuxer.sln](Remuxer.sln) (or build via the repo-root `VisualMusic.sln`). `Remuxer.exe` is
   .NET Framework 4.8; `libRemuxer` and the vendored libs are C++/x64.
-- Remuxer's post-build assembles `roms/` and the native DLLs (libRemuxer, libopenmpt, libmikmod) next to
+- Remuxer's post-build assembles `roms/` and the native DLLs (libRemuxer, libopenmpt) next to
   `Remuxer.exe`; VisualMusic's post-build then copies the whole Remuxer output into `<app output>\remuxer\`.
 
-See [../../CLAUDE.md](../../CLAUDE.md) for the repo-wide picture. Note: most of `libRemuxer/` (openmpt, mikmod,
+See [../../CLAUDE.md](../../CLAUDE.md) for the repo-wide picture. Note: most of `libRemuxer/` (openmpt,
 sidplayfp and their dependencies) is vendored third-party code — treat it as upstream.
