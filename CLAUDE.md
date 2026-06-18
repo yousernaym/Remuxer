@@ -20,9 +20,9 @@ because the MonoGame and libsidplayfp licenses conflict. The launch site is
    ([Remuxer/LibRemuxer.cs](Remuxer/LibRemuxer.cs): `initLib`, `beginProcessing(ref Args)`, `process`,
    `endProcessing`, `closeLib`).
 2. **libRemuxer/** (nested submodule) — the native C++ engine wrapping the vendored format libraries
-   **libsidplayfp** and **libopenmpt** (which in turn pull in mpg123/ogg/vorbis). libopenmpt handles both
-   tracker-module note extraction and audio rendering. All of these are included as projects in the
-   repo-root `VisualMusic.sln`.
+   **libsidplayfp** 3.0.1 (+ its split-out ReSIDfp engine **libresidfp** 1.0.2) and **libopenmpt** (which in
+   turn pulls in mpg123/ogg/vorbis). libopenmpt handles both tracker-module note extraction and audio
+   rendering. All of these are included as projects in the repo-root `VisualMusic.sln`.
 
 ## CLI contract
 
