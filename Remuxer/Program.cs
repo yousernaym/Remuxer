@@ -1,23 +1,28 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace Remuxer
 {
     static class Program
     {
         /// <summary>
-        /// The main entry point for the application.
+        /// Console entry point. Converts a tracker module / SID file into MIDI + WAV via libRemuxer.
+        ///
+        /// Output contract:
+        ///   - One description line (e.g. "Extracting notes and audio from foo.mod").
+        ///   - "Progress: N%" updated as N changes. When stdout is a terminal the line is rewritten
+        ///     in place with '\r'; when redirected (e.g. launched by Visual Music) each update is
+        ///     emitted as its own newline-terminated line so the parent can read it line-by-line.
+        ///   - Errors go to stderr; a non-zero exit code signals failure to the caller.
         /// </summary>
-        [STAThread]
-        static void Main(string[] cmdLineArgs)
+        static int Main(string[] cmdLineArgs)
         {
             Args args = new Args();
             if (cmdLineArgs.Length == 0)
             {
                 ShowUsage();
-                return;
+                return 0;
             }
 
             bool audioFlag = false, midiFlag = false;
@@ -47,10 +52,7 @@ namespace Remuxer
                         if (flagArg != null)
                         {
                             if (!int.TryParse(flagArg, out args.subSong))
-                            {
-                                ShowUsage($"Invalid -s argument \"{flagArg}\".");
-                                return;
-                            }
+                                return ShowUsage($"Invalid -s argument \"{flagArg}\".");
                         }
                     }
                     else if (flag == 'l') //Song lenght
@@ -58,10 +60,7 @@ namespace Remuxer
                         if (flagArg != null)
                         {
                             if (!float.TryParse(flagArg, out args.songLengthS))
-                            {
-                                ShowUsage($"Invalid -l argument \"{flagArg}\".");
-                                return;
-                            }
+                                return ShowUsage($"Invalid -l argument \"{flagArg}\".");
                         }
                     }
                     else if (flag == 'i') //Input note file
@@ -74,27 +73,20 @@ namespace Remuxer
                     }
                     else
                     {
-                        ShowUsage($"Invalid flag -{flag}.");
-                        return;
+                        return ShowUsage($"Invalid flag -{flag}.");
                     }
                 }
                 else
                 {
                     args.inputPath = cmdLineArgs[i];
                     if (string.IsNullOrWhiteSpace(args.inputPath))
-                    {
-                        ShowUsage("No input file specified.");
-                        return;
-                    }
+                        return ShowUsage("No input file specified.");
                 }
             }
 
-            //Check if input file exests
+            //Check if input file exists
             if (!File.Exists(args.inputPath))
-            {
-                ShowError($"Couldn't find input file \"{args.inputPath}\".");
-                return;
-            }
+                return ShowError($"Couldn't find input file \"{args.inputPath}\".");
 
             //Derive output paths from input path if output path is not specified or if no output flags are specified
             bool noOutputFlags = !midiFlag && !audioFlag;
@@ -113,20 +105,69 @@ namespace Remuxer
             }
             catch (Exception e)
             {
-                ShowError(e.Message);
-                return;
+                return ShowError(e.Message);
             }
 
+            LibRemuxer.InitLib();
             try
             {
-                LibRemuxer.InitLib();
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new Form1(args));
+                return Process(ref args);
             }
             finally
             {
                 LibRemuxer.CloseLib();
+            }
+        }
+
+        static int Process(ref Args args)
+        {
+            if (!LibRemuxer.BeginProcessing(ref args))
+            {
+                if (!args.suppressErrors)
+                    ShowError($"Couldn't parse input file \"{args.inputPath}\".");
+                return 1;
+            }
+
+            try
+            {
+                string text = "Extracting";
+                if (args.midiPath != null)
+                {
+                    text += " notes";
+                    if (args.audioPath != null)
+                        text += " and audio";
+                }
+                else
+                    text += " audio";
+                text += $" from {Path.GetFileName(args.inputPath)}";
+
+                if (args.numSubSongs > 1)
+                    text += $" ({args.subSong}/{args.numSubSongs}).";
+                Console.Out.WriteLine(text);
+
+                bool redirected = Console.IsOutputRedirected;
+                int lastPercent = -1;
+                float progress = 0;
+                while (progress >= 0)
+                {
+                    int percent = (int)(progress * 100);
+                    if (percent != lastPercent)
+                    {
+                        lastPercent = percent;
+                        if (redirected)
+                            Console.Out.WriteLine($"Progress: {percent}%");
+                        else
+                            Console.Out.Write($"\rProgress: {percent}%");
+                    }
+                    progress = LibRemuxer.Process();
+                }
+                if (!redirected)
+                    Console.Out.WriteLine(); //terminate the in-place progress line
+                return 0;
+            }
+            finally
+            {
+                LibRemuxer.EndProcessing();
             }
         }
 
@@ -144,36 +185,32 @@ namespace Remuxer
             }
         }
 
-        static void ShowUsage(string errorMsg = null)
+        static int ShowUsage(string errorMsg = null)
         {
-            MessageBoxIcon mbIcon = MessageBoxIcon.Information;
-            string usage = errorMsg;
-            if (usage != null)
-            {
-                usage = "Error: " + errorMsg + "\n\n";
-                mbIcon = MessageBoxIcon.Error;
-            }
-
-            usage += "Syntax: remuxer <input file> [-<flag>[argument]]\n\n";
-            usage += "Flags:\n";
-            usage += "-a[wav output file]      default = <input file>.wav\n";
-            usage += "-m[midi output file]      default = <input file>.mid\n";
-            usage += "-i One track per instrument instead of one per channel.\n";
-            usage += "\n";
-            usage += "Sid/Hvl-specific:\n";
-            usage += "-s<subsong number>\n";
-            usage += "-l<length of song> (Sid only)\n";
-            usage += "\n";
-            usage += "If both -a and -m are ommitted, both are set implicitly.";
-
-            MessageBox.Show(usage, "", MessageBoxButtons.OK, mbIcon);
+            TextWriter w = errorMsg == null ? Console.Out : Console.Error;
+            if (errorMsg != null)
+                w.WriteLine("Error: " + errorMsg);
+            w.WriteLine();
+            w.WriteLine("Syntax: remuxer <input file> [-<flag>[argument]]");
+            w.WriteLine();
+            w.WriteLine("Flags:");
+            w.WriteLine("-a[wav output file]      default = <input file>.wav");
+            w.WriteLine("-m[midi output file]      default = <input file>.mid");
+            w.WriteLine("-i One track per instrument instead of one per channel.");
+            w.WriteLine();
+            w.WriteLine("Sid/Hvl-specific:");
+            w.WriteLine("-s<subsong number>");
+            w.WriteLine("-l<length of song> (Sid only)");
+            w.WriteLine();
+            w.WriteLine("If both -a and -m are ommitted, both are set implicitly.");
+            return errorMsg == null ? 0 : 1;
         }
 
-        public static void ShowError(string errorMsg)
+        public static int ShowError(string errorMsg)
         {
-            MessageBox.Show(errorMsg, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Console.Error.WriteLine("Error: " + errorMsg);
+            return 1;
         }
-
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]

@@ -15,7 +15,7 @@ because the MonoGame and libsidplayfp licenses conflict. The launch site is
 
 ## Two layers
 
-1. **Remuxer/** — a C# WinForms front-end (`Remuxer.exe`, .NET Framework 4.8). [Remuxer/Program.cs](Remuxer/Program.cs)
+1. **Remuxer/** — a C# **console** front-end (`Remuxer.exe`, **.NET 10**). [Remuxer/Program.cs](Remuxer/Program.cs)
    parses the command line and drives conversion through P/Invoke into `libRemuxer.dll`
    ([Remuxer/LibRemuxer.cs](Remuxer/LibRemuxer.cs): `initLib`, `beginProcessing(ref Args)`, `process`,
    `endProcessing`, `closeLib`).
@@ -34,12 +34,28 @@ because the MonoGame and libsidplayfp licenses conflict. The launch site is
 - `-s<n>` SID sub-song, `-l<seconds>` SID song length, `-e` suppress conversion errors.
 
 The `Args` struct (bottom of `Program.cs`) is marshaled to the native side; `numSubSongs` is an out value so
-the app can prompt the user to pick a SID sub-song.
+the app can prompt the user to pick a SID sub-song. Visual Music determines the sub-song separately and passes
+it back in via `-s`.
+
+## stdout contract (parsed by Visual Music)
+
+Remuxer prints, in order:
+
+1. one description line, e.g. `Extracting notes and audio from foo.mod`;
+2. `Progress: N%` updated as `N` changes — rewritten in place with `\r` when stdout is a terminal, or emitted
+   as separate newline-terminated lines when stdout is redirected (`Console.IsOutputRedirected`).
+
+Errors go to **stderr** and a **non-zero exit code** signals failure (no GUI message boxes). Visual Music
+launches it with `RedirectStandardOutput`, scrapes the `Progress: N%` lines with a regex, and drives the
+shared `ProgressWindow` (see [../../VisualMusic/Project.cs](../../VisualMusic/Project.cs) `ImportSong` and
+[../../VisualMusic/ViewModels/MainViewModel.cs](../../VisualMusic/ViewModels/MainViewModel.cs) `DoImport`).
 
 ## Build & output
 
-- Solution: [Remuxer.sln](Remuxer.sln) (or build via the repo-root `VisualMusic.sln`). `Remuxer.exe` is
-  .NET Framework 4.8; `libRemuxer` and the vendored libs are C++/x64.
+- Solution: [Remuxer.sln](Remuxer.sln) (or build via the repo-root `VisualMusic.sln`). `Remuxer.exe` is a
+  .NET 10 console app (SDK-style csproj, output flattened to `bin\<Config>\` via
+  `AppendTargetFrameworkToOutputPath=false` so Visual Music's copy step still finds it); `libRemuxer` and the
+  vendored libs are C++/x64.
 - Remuxer's post-build assembles `roms/` and the native DLLs (libRemuxer, libopenmpt) next to
   `Remuxer.exe`; VisualMusic's post-build then copies the whole Remuxer output into `<app output>\remuxer\`.
 
