@@ -26,6 +26,7 @@ namespace Remuxer
             }
 
             bool audioFlag = false, midiFlag = false;
+            string cancelPath = null;
             for (int i = 0; i < cmdLineArgs.Length; i++)
             {
                 string arg = cmdLineArgs[i];
@@ -71,6 +72,10 @@ namespace Remuxer
                     {
                         args.suppressErrors = true;
                     }
+                    else if (flag == 'c') //Cancel signal file
+                    {
+                        cancelPath = flagArg;
+                    }
                     else
                     {
                         return ShowUsage($"Invalid flag -{flag}.");
@@ -111,7 +116,7 @@ namespace Remuxer
             LibRemuxer.InitLib();
             try
             {
-                return Process(ref args);
+                return Process(ref args, cancelPath);
             }
             finally
             {
@@ -119,7 +124,7 @@ namespace Remuxer
             }
         }
 
-        static int Process(ref Args args)
+        static int Process(ref Args args, string cancelPath)
         {
             if (!LibRemuxer.BeginProcessing(ref args))
             {
@@ -148,8 +153,15 @@ namespace Remuxer
                 bool redirected = Console.IsOutputRedirected;
                 int lastPercent = -1;
                 float progress = 0;
+                bool cancelled = false;
                 while (progress >= 0)
                 {
+                    if (IsCancelRequested(cancelPath))
+                    {
+                        cancelled = true;
+                        break;
+                    }
+
                     int percent = (int)(progress * 100);
                     if (percent != lastPercent)
                     {
@@ -163,13 +175,16 @@ namespace Remuxer
                 }
                 if (!redirected)
                     Console.Out.WriteLine(); //terminate the in-place progress line
-                return 0;
+                return cancelled ? 2 : 0;
             }
             finally
             {
                 LibRemuxer.EndProcessing();
             }
         }
+
+        static bool IsCancelRequested(string cancelPath) =>
+            !string.IsNullOrWhiteSpace(cancelPath) && File.Exists(cancelPath);
 
         static void CheckPath(string path, string flag)
         {
@@ -197,6 +212,7 @@ namespace Remuxer
             w.WriteLine("-a[wav output file]      default = <input file>.wav");
             w.WriteLine("-m[midi output file]      default = <input file>.mid");
             w.WriteLine("-i One track per instrument instead of one per channel.");
+            w.WriteLine("-c[path] Cancel when this signal file exists.");
             w.WriteLine();
             w.WriteLine("Sid/Hvl-specific:");
             w.WriteLine("-s<subsong number>");
