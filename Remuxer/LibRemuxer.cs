@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Remuxer
 {
@@ -14,5 +15,9 @@ namespace Remuxer
         public static extern float Process();
         [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "endProcessing")]
         public static extern void EndProcessing();
+        [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getNumTrackAudioFiles")]
+        public static extern int GetNumTrackAudioFiles();
+        [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, EntryPoint = "getTrackAudioFile")]
+        public static extern bool GetTrackAudioFile(int index, out int midiTrack, StringBuilder path, int maxLength);
     }
 }

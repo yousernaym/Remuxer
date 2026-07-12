@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Remuxer
 {
@@ -76,6 +77,10 @@ namespace Remuxer
                     {
                         cancelPath = flagArg;
                     }
+                    else if (flag == 't') //Per-track audio output base path
+                    {
+                        args.trackAudioPath = flagArg;
+                    }
                     else
                     {
                         return ShowUsage($"Invalid flag -{flag}.");
@@ -107,6 +112,15 @@ namespace Remuxer
                     CheckPath(args.midiPath, "-m");
                 if (audioFlag)
                     CheckPath(args.audioPath, "-a");
+                if (!string.IsNullOrEmpty(args.trackAudioPath))
+                {
+                    //Base path is a file-name prefix inside a directory; ensure the directory exists
+                    //and is writable.
+                    string dir = Path.GetDirectoryName(args.trackAudioPath);
+                    if (!string.IsNullOrEmpty(dir))
+                        Directory.CreateDirectory(dir);
+                    CheckPath(args.trackAudioPath + ".probe", "-t");
+                }
             }
             catch (Exception e)
             {
@@ -180,6 +194,16 @@ namespace Remuxer
             finally
             {
                 LibRemuxer.EndProcessing();
+
+                //Enumerate the per-track WAVs that were saved (runs on cancel too — lists only
+                //completed tracks). Contract: "TrackAudio: <miditrack>|<path>", one per line.
+                int numTrackFiles = LibRemuxer.GetNumTrackAudioFiles();
+                var sb = new StringBuilder(1024);
+                for (int i = 0; i < numTrackFiles; i++)
+                {
+                    if (LibRemuxer.GetTrackAudioFile(i, out int midiTrack, sb, sb.Capacity))
+                        Console.Out.WriteLine($"TrackAudio: {midiTrack}|{sb}");
+                }
             }
         }
 
@@ -213,6 +237,7 @@ namespace Remuxer
             w.WriteLine("-m[midi output file]      default = <input file>.mid");
             w.WriteLine("-i One track per instrument instead of one per channel.");
             w.WriteLine("-c[path] Cancel when this signal file exists.");
+            w.WriteLine("-t[base path] Also render one WAV per track (files named <base>-trackNN-<name>.wav).");
             w.WriteLine();
             w.WriteLine("Sid/Hvl-specific:");
             w.WriteLine("-s<subsong number>");
@@ -239,6 +264,7 @@ namespace Remuxer
         public float songLengthS;
         public int subSong;
         public int numSubSongs; //out parameter
-        public bool suppressErrors;
+        public string trackAudioPath; //base path for per-track WAVs ("" = disabled); mirrors native offset 40
+        public bool suppressErrors; //unread by native; stays last
     }
 }
