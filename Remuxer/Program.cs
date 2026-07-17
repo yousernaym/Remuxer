@@ -196,13 +196,20 @@ namespace Remuxer
                 LibRemuxer.EndProcessing();
 
                 //Enumerate the per-track WAVs that were saved (runs on cancel too — lists only
-                //completed tracks). Contract: "TrackAudio: <miditrack>|<path>", one per line.
+                //completed tracks). Two line types:
+                //  "TrackAudio: <miditrack>|<path>"                whole-track WAV (per-channel mode)
+                //  "TrackVoiceAudio: <miditrack>|<channel>|<path>" per-voice WAV (per-instrument mode)
                 int numTrackFiles = LibRemuxer.GetNumTrackAudioFiles();
                 var sb = new StringBuilder(1024);
                 for (int i = 0; i < numTrackFiles; i++)
                 {
-                    if (LibRemuxer.GetTrackAudioFile(i, out int midiTrack, sb, sb.Capacity))
-                        Console.Out.WriteLine($"TrackAudio: {midiTrack}|{sb}");
+                    if (LibRemuxer.GetTrackAudioFile(i, out int midiTrack, out int channel, sb, sb.Capacity))
+                    {
+                        if (channel < 0)
+                            Console.Out.WriteLine($"TrackAudio: {midiTrack}|{sb}");
+                        else
+                            Console.Out.WriteLine($"TrackVoiceAudio: {midiTrack}|{channel}|{sb}");
+                    }
                 }
             }
         }
@@ -237,7 +244,9 @@ namespace Remuxer
             w.WriteLine("-m[midi output file]      default = <input file>.mid");
             w.WriteLine("-i One track per instrument instead of one per channel.");
             w.WriteLine("-c[path] Cancel when this signal file exists.");
-            w.WriteLine("-t[base path] Also render one WAV per track (files named <base>-trackNN-<name>.wav).");
+            w.WriteLine("-t[base path] Also render per-track WAVs. Per-channel mode: one <base>-trackNN-<name>.wav");
+            w.WriteLine("             per track. Per-instrument mode (-i): one <base>-trackNN-chCC-<name>.wav per");
+            w.WriteLine("             source channel that plays the instrument (exact per-voice splitting).");
             w.WriteLine();
             w.WriteLine("Sid/Hvl-specific:");
             w.WriteLine("-s<subsong number>");
