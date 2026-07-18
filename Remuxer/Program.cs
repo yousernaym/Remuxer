@@ -196,9 +196,9 @@ namespace Remuxer
                 LibRemuxer.EndProcessing();
 
                 //Enumerate the per-track WAVs that were saved (runs on cancel too — lists only
-                //completed tracks). Two line types:
-                //  "TrackAudio: <miditrack>|<path>"                whole-track WAV (per-channel mode)
-                //  "TrackVoiceAudio: <miditrack>|<channel>|<path>" per-voice WAV (per-instrument mode)
+                //completed tracks). Two line types (paths are always "<base>-chCC.wav"):
+                //  "TrackAudio: <miditrack>|<path>"                per-channel mode (assign as Filename)
+                //  "TrackVoiceAudio: <miditrack>|<channel>|<path>" per-instrument mode (shared channel WAV)
                 int numTrackFiles = LibRemuxer.GetNumTrackAudioFiles();
                 var sb = new StringBuilder(1024);
                 for (int i = 0; i < numTrackFiles; i++)
@@ -244,9 +244,10 @@ namespace Remuxer
             w.WriteLine("-m[midi output file]      default = <input file>.mid");
             w.WriteLine("-i One track per instrument instead of one per channel.");
             w.WriteLine("-c[path] Cancel when this signal file exists.");
-            w.WriteLine("-t[base path] Also render per-track WAVs. Per-channel mode: one <base>-trackNN-<name>.wav");
-            w.WriteLine("             per track. Per-instrument mode (-i): one <base>-trackNN-chCC-<name>.wav per");
-            w.WriteLine("             source channel that plays the instrument (exact per-voice splitting).");
+            w.WriteLine("-t[base path] Also render per-channel WAVs as <base>-chCC.wav (same names with or");
+            w.WriteLine("             without -i). Per-channel mode: one file per MIDI track. Per-instrument");
+            w.WriteLine("             mode (-i): one file per source channel, shared by instrument tracks that");
+            w.WriteLine("             play on it (the host app gates each track to its note ranges).");
             w.WriteLine();
             w.WriteLine("Sid/Hvl-specific:");
             w.WriteLine("-s<subsong number>");

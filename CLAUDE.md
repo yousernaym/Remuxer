@@ -30,7 +30,9 @@ because the MonoGame and libsidplayfp licenses conflict. The launch site is
 
 - `-m[path]` MIDI output (default `<input>.mid`), `-a[path]` WAV output (default `<input>.wav`); omitting both
   implicitly sets both.
-- `-i` one track per instrument instead of per channel.
+- `-i` one MIDI track per instrument instead of per channel.
+- `-t[base]` also render per-channel solo WAVs as `<base>-chCC.wav` (same filenames with or without `-i`).
+- `-c[path]` cancel when this signal file exists.
 - `-s<n>` SID sub-song, `-l<seconds>` SID song length, `-e` suppress conversion errors.
 
 The `Args` struct (bottom of `Program.cs`) is marshaled to the native side; `numSubSongs` is an out value so
@@ -43,7 +45,11 @@ Remuxer prints, in order:
 
 1. one description line, e.g. `Extracting notes and audio from foo.mod`;
 2. `Progress: N%` updated as `N` changes — rewritten in place with `\r` when stdout is a terminal, or emitted
-   as separate newline-terminated lines when stdout is redirected (`Console.IsOutputRedirected`).
+   as separate newline-terminated lines when stdout is redirected (`Console.IsOutputRedirected`);
+3. after processing (when `-t` was used), zero or more track-audio lines:
+   - `TrackAudio: <miditrack>|<path>` — per-channel MIDI mode (`Filename` assign); path is `<base>-chCC.wav`
+   - `TrackVoiceAudio: <miditrack>|<channel>|<path>` — per-instrument mode; same `-chCC.wav` path shared by
+     instrument tracks on that channel (the app gates by note ownership)
 
 Errors go to **stderr** and a **non-zero exit code** signals failure (no GUI message boxes). Visual Music
 launches it with `RedirectStandardOutput`, scrapes the `Progress: N%` lines with a regex, and drives the
