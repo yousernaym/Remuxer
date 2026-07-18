@@ -31,7 +31,8 @@ because the MonoGame and libsidplayfp licenses conflict. The launch site is
 - `-m[path]` MIDI output (default `<input>.mid`), `-a[path]` WAV output (default `<input>.wav`); omitting both
   implicitly sets both.
 - `-i` one MIDI track per instrument instead of per channel.
-- `-t[base]` also render per-channel solo WAVs as `<base>-chCC.wav` (same filenames with or without `-i`).
+- `-t[base]` also render per-channel solo WAVs as `<base>-chCC.wav` (8-bit mono; same filenames with or
+  without `-i`). The `-a` mixdown stays float stereo.
 - `-c[path]` cancel when this signal file exists.
 - `-s<n>` SID sub-song, `-l<seconds>` SID song length, `-e` suppress conversion errors.
 

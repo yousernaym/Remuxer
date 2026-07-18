@@ -244,10 +244,11 @@ namespace Remuxer
             w.WriteLine("-m[midi output file]      default = <input file>.mid");
             w.WriteLine("-i One track per instrument instead of one per channel.");
             w.WriteLine("-c[path] Cancel when this signal file exists.");
-            w.WriteLine("-t[base path] Also render per-channel WAVs as <base>-chCC.wav (same names with or");
-            w.WriteLine("             without -i). Per-channel mode: one file per MIDI track. Per-instrument");
-            w.WriteLine("             mode (-i): one file per source channel, shared by instrument tracks that");
-            w.WriteLine("             play on it (the host app gates each track to its note ranges).");
+            w.WriteLine("-t[base path] Also render per-channel WAVs as <base>-chCC.wav (8-bit mono; same names");
+            w.WriteLine("             with or without -i). Per-channel mode: one file per MIDI track.");
+            w.WriteLine("             Per-instrument mode (-i): one file per source channel, shared by");
+            w.WriteLine("             instrument tracks that play on it (host app gates by note ranges).");
+            w.WriteLine("             The -a mixdown stays float stereo.");
             w.WriteLine();
             w.WriteLine("Sid/Hvl-specific:");
             w.WriteLine("-s<subsong number>");
