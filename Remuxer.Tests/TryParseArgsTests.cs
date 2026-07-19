@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Threading;
 using Xunit;
 
 namespace Remuxer.Tests
@@ -62,6 +64,25 @@ namespace Remuxer.Tests
                 new[] { "in.sid", "-lnope" },
                 out _, out _, out _, out _, out string error));
             Assert.Contains("-l", error);
+        }
+
+        [Fact]
+        public void Length_uses_invariant_culture()
+        {
+            var prev = CultureInfo.CurrentCulture;
+            try
+            {
+                // Comma-decimal locale must not reject dotted -l5.5
+                Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+                Assert.True(Program.TryParseArgs(
+                    new[] { "in.sid", "-l5.5" },
+                    out var args, out _, out _, out _, out _));
+                Assert.Equal(5.5f, args.songLengthS);
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = prev;
+            }
         }
     }
 }

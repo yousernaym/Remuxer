@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -121,7 +122,7 @@ namespace Remuxer
                     {
                         if (flagArg != null)
                         {
-                            if (!float.TryParse(flagArg, out args.songLengthS))
+                            if (!float.TryParse(flagArg, NumberStyles.Float, CultureInfo.InvariantCulture, out args.songLengthS))
                             {
                                 error = $"Invalid -l argument \"{flagArg}\".";
                                 return false;
