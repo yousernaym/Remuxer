@@ -5,12 +5,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Remuxer.Tests
 {
     public class RemuxerCliTests
     {
+        const int RemuxerTimeoutMs = 120_000;
+
         static readonly Regex ProgressRegex = new Regex(@"^Progress:\s*(\d+)%", RegexOptions.Compiled);
         static readonly Regex TrackAudioRegex = new Regex(@"^TrackAudio:\s*(\d+)\|(.+)$", RegexOptions.Compiled);
         static readonly Regex TrackVoiceAudioRegex = new Regex(@"^TrackVoiceAudio:\s*(\d+)\|(\d+)\|(.+)$", RegexOptions.Compiled);
@@ -63,10 +66,22 @@ namespace Remuxer.Tests
             foreach (var a in args)
                 psi.ArgumentList.Add(a);
 
-            using var p = Process.Start(psi);
-            string stdout = p.StandardOutput.ReadToEnd();
-            string stderr = p.StandardError.ReadToEnd();
-            p.WaitForExit(120_000);
+            using var p = Process.Start(psi)
+                ?? throw new InvalidOperationException("Failed to start Remuxer.exe.");
+
+            // Read async so WaitForExit(timeout) can fire if Remuxer hangs with pipes open.
+            Task<string> stdoutTask = p.StandardOutput.ReadToEndAsync();
+            Task<string> stderrTask = p.StandardError.ReadToEndAsync();
+            if (!p.WaitForExit(RemuxerTimeoutMs))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { /* best-effort */ }
+                try { p.WaitForExit(5_000); } catch { }
+                throw new TimeoutException(
+                    $"Remuxer timed out after {RemuxerTimeoutMs / 1000}s. Args: {string.Join(' ', args)}");
+            }
+
+            string stdout = stdoutTask.GetAwaiter().GetResult();
+            string stderr = stderrTask.GetAwaiter().GetResult();
             return (p.ExitCode, stdout, stderr);
         }
 
@@ -137,7 +152,8 @@ namespace Remuxer.Tests
         [Trait("Category", "Integration")]
         public void Track_audio_lines_match_visual_music_regexes()
         {
-            string input = TestFiles.PathTo("minimal.mod");
+            // minimal.ahx has audible channels; minimal.mod's synthetic pattern often yields none.
+            string input = TestFiles.PathTo("minimal.ahx");
             string outDir = Path.Combine(Path.GetTempPath(), "vm_remuxer_t_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(outDir);
             try
@@ -151,10 +167,14 @@ namespace Remuxer.Tests
                 var lines = stdout.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 var trackLines = lines.Where(l =>
                     TrackAudioRegex.IsMatch(l) || TrackVoiceAudioRegex.IsMatch(l)).ToList();
-                // minimal.mod may or may not emit track lines depending on content; if present they must parse
+                Assert.NotEmpty(trackLines);
                 foreach (var line in trackLines)
                 {
-                    Assert.True(TrackAudioRegex.IsMatch(line) || TrackVoiceAudioRegex.IsMatch(line));
+                    var audio = TrackAudioRegex.Match(line);
+                    var voice = TrackVoiceAudioRegex.Match(line);
+                    Assert.True(audio.Success || voice.Success, line);
+                    string path = audio.Success ? audio.Groups[2].Value : voice.Groups[3].Value;
+                    Assert.True(File.Exists(path), "track wav missing: " + path);
                 }
             }
             finally

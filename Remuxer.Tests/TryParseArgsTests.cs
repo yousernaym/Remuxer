@@ -72,12 +72,21 @@ namespace Remuxer.Tests
             var prev = CultureInfo.CurrentCulture;
             try
             {
-                // Comma-decimal locale must not reject dotted -l5.5
+                // Comma-decimal locale must not reject dotted -l5.5 (VM emits invariant via FormatRemuxerSongLengthFlag).
                 Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
                 Assert.True(Program.TryParseArgs(
                     new[] { "in.sid", "-l5.5" },
                     out var args, out _, out _, out _, out _));
                 Assert.Equal(5.5f, args.songLengthS);
+                Assert.True(Program.TryParseArgs(
+                    new[] { "in.sid", "-l23.079" },
+                    out args, out _, out _, out _, out _));
+                Assert.Equal(23.079f, args.songLengthS, 3);
+                // Comma form must fail — matches what invariant ToString never produces.
+                Assert.False(Program.TryParseArgs(
+                    new[] { "in.sid", "-l23,079" },
+                    out _, out _, out _, out _, out string error));
+                Assert.Contains("-l", error);
             }
             finally
             {
