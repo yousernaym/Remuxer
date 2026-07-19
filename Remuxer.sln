@@ -33,6 +33,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vorbis", "libRemuxer\openmp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpg123", "libRemuxer\openmpt\build\vs2019win10\ext\mpg123.vcxproj", "{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Remuxer.Tests", "Remuxer.Tests\Remuxer.Tests.csproj", "{274B3572-3B50-484C-B311-8902B41D5896}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "midilib", "..\midiLib\midilib.csproj", "{E08DD009-02C9-4F0F-98A8-CA290A144D84}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libRemuxer.Tests", "libRemuxer\tests\libRemuxer.Tests.vcxproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -163,11 +169,57 @@ Global
 		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}.Release|x64.Build.0 = Release|x64
 		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}.Release|x86.ActiveCfg = Release|Win32
 		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|ARM.Build.0 = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|x64.Build.0 = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Debug|x86.Build.0 = Debug|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|Any CPU.Build.0 = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|ARM.ActiveCfg = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|ARM.Build.0 = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|ARM64.Build.0 = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|x64.ActiveCfg = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|x64.Build.0 = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|x86.ActiveCfg = Release|Any CPU
+		{274B3572-3B50-484C-B311-8902B41D5896}.Release|x86.Build.0 = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|ARM.Build.0 = Debug|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|x64.ActiveCfg = Debug|x64
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|x64.Build.0 = Debug|x64
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|x86.ActiveCfg = Debug|x86
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Debug|x86.Build.0 = Debug|x86
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|ARM.ActiveCfg = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|ARM.Build.0 = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|ARM64.Build.0 = Release|Any CPU
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|x64.ActiveCfg = Release|x64
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|x64.Build.0 = Release|x64
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|x86.ActiveCfg = Release|x86
+		{E08DD009-02C9-4F0F-98A8-CA290A144D84}.Release|x86.Build.0 = Release|x86
+			{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.ActiveCfg = Debug|x64
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.Build.0 = Debug|x64
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.ActiveCfg = Release|x64
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.Build.0 = Release|x64
+EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E9184D77-A5E9-47C7-9703-FFA5B6F3DE8C}
 	EndGlobalSection
-EndGlobal
+EndProject("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libRemuxer.Tests", "libRemuxer\tests\libRemuxer.Tests.vcxproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
+Global

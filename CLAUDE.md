@@ -68,3 +68,13 @@ shared `ProgressWindow` (see [../../VisualMusic/Project.cs](../../VisualMusic/Pr
 
 See [../../CLAUDE.md](../../CLAUDE.md) for the repo-wide picture. Note: most of `libRemuxer/` (openmpt,
 sidplayfp and their dependencies) is vendored third-party code — treat it as upstream.
+
+## Testing
+
+```powershell
+dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category!=Integration" --nologo
+# After building Remuxer.exe + libRemuxer (x64):
+dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category=Integration" --nologo
+```
+
+GoogleTest for first-party Song/FileFormat/Wav: see [libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).

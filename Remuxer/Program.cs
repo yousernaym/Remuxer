@@ -19,80 +19,14 @@ namespace Remuxer
         /// </summary>
         static int Main(string[] cmdLineArgs)
         {
-            Args args = new Args();
             if (cmdLineArgs.Length == 0)
             {
                 ShowUsage();
                 return 0;
             }
 
-            bool audioFlag = false, midiFlag = false;
-            string cancelPath = null;
-            for (int i = 0; i < cmdLineArgs.Length; i++)
-            {
-                string arg = cmdLineArgs[i];
-                if (arg.Length >= 2 && arg[0] == '-')
-                {
-                    char flag = arg[1];
-                    string flagArg = null;
-
-                    //Was an argument relating to this flag specified?
-                    if (arg.Length > 2)
-                        flagArg = arg.Substring(2);
-                    if (flag == 'm') //Midi output
-                    {
-                        midiFlag = true;
-                        args.midiPath = flagArg;
-                    }
-                    else if (flag == 'a') //Audio output
-                    {
-                        audioFlag = true;
-                        args.audioPath = flagArg;
-                    }
-                    else if (flag == 's') //Sub song
-                    {
-                        if (flagArg != null)
-                        {
-                            if (!int.TryParse(flagArg, out args.subSong))
-                                return ShowUsage($"Invalid -s argument \"{flagArg}\".");
-                        }
-                    }
-                    else if (flag == 'l') //Song lenght
-                    {
-                        if (flagArg != null)
-                        {
-                            if (!float.TryParse(flagArg, out args.songLengthS))
-                                return ShowUsage($"Invalid -l argument \"{flagArg}\".");
-                        }
-                    }
-                    else if (flag == 'i') //Input note file
-                    {
-                        args.modInsTrack = true;
-                    }
-                    else if (flag == 'e') //Suppress conversion errors
-                    {
-                        args.suppressErrors = true;
-                    }
-                    else if (flag == 'c') //Cancel signal file
-                    {
-                        cancelPath = flagArg;
-                    }
-                    else if (flag == 't') //Per-track audio output base path
-                    {
-                        args.trackAudioPath = flagArg;
-                    }
-                    else
-                    {
-                        return ShowUsage($"Invalid flag -{flag}.");
-                    }
-                }
-                else
-                {
-                    args.inputPath = cmdLineArgs[i];
-                    if (string.IsNullOrWhiteSpace(args.inputPath))
-                        return ShowUsage("No input file specified.");
-                }
-            }
+            if (!TryParseArgs(cmdLineArgs, out Args args, out string cancelPath, out bool midiFlag, out bool audioFlag, out string error))
+                return ShowUsage(error);
 
             //Check if input file exists
             if (!File.Exists(args.inputPath))
@@ -136,6 +70,98 @@ namespace Remuxer
             {
                 LibRemuxer.CloseLib();
             }
+        }
+
+        /// <summary>
+        /// Parses CLI flags into <see cref="Args"/>. Does not check that the input file exists
+        /// or derive default output paths — those remain in <see cref="Main"/>.
+        /// </summary>
+        internal static bool TryParseArgs(string[] cmdLineArgs, out Args args, out string cancelPath,
+            out bool midiFlag, out bool audioFlag, out string error)
+        {
+            args = new Args();
+            cancelPath = null;
+            midiFlag = false;
+            audioFlag = false;
+            error = null;
+
+            for (int i = 0; i < cmdLineArgs.Length; i++)
+            {
+                string arg = cmdLineArgs[i];
+                if (arg.Length >= 2 && arg[0] == '-')
+                {
+                    char flag = arg[1];
+                    string flagArg = null;
+
+                    //Was an argument relating to this flag specified?
+                    if (arg.Length > 2)
+                        flagArg = arg.Substring(2);
+                    if (flag == 'm') //Midi output
+                    {
+                        midiFlag = true;
+                        args.midiPath = flagArg;
+                    }
+                    else if (flag == 'a') //Audio output
+                    {
+                        audioFlag = true;
+                        args.audioPath = flagArg;
+                    }
+                    else if (flag == 's') //Sub song
+                    {
+                        if (flagArg != null)
+                        {
+                            if (!int.TryParse(flagArg, out args.subSong))
+                            {
+                                error = $"Invalid -s argument \"{flagArg}\".";
+                                return false;
+                            }
+                        }
+                    }
+                    else if (flag == 'l') //Song lenght
+                    {
+                        if (flagArg != null)
+                        {
+                            if (!float.TryParse(flagArg, out args.songLengthS))
+                            {
+                                error = $"Invalid -l argument \"{flagArg}\".";
+                                return false;
+                            }
+                        }
+                    }
+                    else if (flag == 'i') //Input note file
+                    {
+                        args.modInsTrack = true;
+                    }
+                    else if (flag == 'e') //Suppress conversion errors
+                    {
+                        args.suppressErrors = true;
+                    }
+                    else if (flag == 'c') //Cancel signal file
+                    {
+                        cancelPath = flagArg;
+                    }
+                    else if (flag == 't') //Per-track audio output base path
+                    {
+                        args.trackAudioPath = flagArg;
+                    }
+                    else
+                    {
+                        error = $"Invalid flag -{flag}.";
+                        return false;
+                    }
+                }
+                else
+                {
+                    args.inputPath = cmdLineArgs[i];
+                    if (string.IsNullOrWhiteSpace(args.inputPath))
+                    {
+                        error = "No input file specified.";
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         static int Process(ref Args args, string cancelPath)

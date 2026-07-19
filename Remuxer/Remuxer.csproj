@@ -15,6 +15,10 @@
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Remuxer.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <!--
       Use $(MSBuildProjectDirectory)/$(OutputPath) instead of the VS macros $(ProjectDir)/$(TargetDir):
