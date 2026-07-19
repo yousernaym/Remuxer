@@ -77,4 +77,7 @@ dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category!=Integration" 
 dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category=Integration" --nologo
 ```
 
-GoogleTest for first-party Song/FileFormat/Wav: see [libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).
+Format fixtures live in [`libRemuxer/test-files/`](libRemuxer/test-files/) (`minimal.mod` / `.ahx` / `.hvl` /
+`.sid`). `Remuxer.Tests` still requires the sibling [`midiLib`](../midiLib/) checkout (project reference)
+to parse and validate generated MIDI. GoogleTest for first-party Song/FileFormat/Wav: see
+[libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).
