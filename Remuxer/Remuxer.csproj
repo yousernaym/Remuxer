@@ -23,9 +23,9 @@
     in SDK-style projects the latter are defined by the implicit SDK targets, which are imported AFTER
     this project body is evaluated, so they bake in as empty here and xcopy fails with exit code 4.
 
-    Native DLL copies must fail loudly when missing: VisualMusic packages bin\$(Configuration)\
-    wholesale into the app remuxer folder. Soft-skip only when Remuxer.Tests builds this project
-    without natives (SkipRemuxerNativeCopy=true via AdditionalProperties).
+    Soft-skip only when natives are fully absent so Remuxer.Tests can ProjectReference this project
+    without AdditionalProperties (avoids a second MSBuild instance racing on the same bin\<Config>\
+    under /m). Partial layouts still Error. Optional: /p:SkipRemuxerNativeCopy=true forces skip.
   -->
   <Target Name="CopyNativeOutputs" AfterTargets="Build"
           Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipRemuxerNativeCopy)' != 'true'">
@@ -41,13 +41,24 @@
       <_LibPdbs Include="$(_LibOut)\*.pdb" />
       <_OpenMpt Include="$(_OpenMptDlls)\*.dll" />
     </ItemGroup>
-    <Error Text="SID ROMs not found at '$(_RomsDir)'." Condition="'@(_Roms)' == ''" />
-    <Error Text="libRemuxer native DLLs not found at '$(_LibOut)'. Build libRemuxer (x64|$(Configuration)) first, or set SkipRemuxerNativeCopy=true for managed-only unit builds." Condition="'@(_LibDlls)' == ''" />
-    <Error Text="libopenmpt DLLs not found at '$(_OpenMptDlls)'. Build libopenmpt ($(Configuration)|amd64) first, or set SkipRemuxerNativeCopy=true for managed-only unit builds." Condition="'@(_OpenMpt)' == ''" />
-    <Copy SourceFiles="@(_Roms)" DestinationFiles="@(_Roms->'$(_OutDir)roms\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_LibDlls)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(_LibPdbs)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" Condition="'@(_LibPdbs)' != ''" />
-    <Copy SourceFiles="@(_OpenMpt)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" />
+    <PropertyGroup>
+      <_NativesReady Condition="'@(_Roms)' != '' and '@(_LibDlls)' != '' and '@(_OpenMpt)' != ''">true</_NativesReady>
+      <!-- Roms are source assets always present; only missing build outputs count as "absent". -->
+      <_AnyBuildNative Condition="'@(_LibDlls)' != '' or '@(_OpenMpt)' != ''">true</_AnyBuildNative>
+    </PropertyGroup>
+    <Message Importance="high"
+             Condition="'$(_NativesReady)' != 'true' and '$(_AnyBuildNative)' != 'true'"
+             Text="CopyNativeOutputs skipped: natives not ready under '$(_LibOut)' / openmpt. Managed-only builds are fine; build libRemuxer + libopenmpt (x64) for a packaged Remuxer.exe." />
+    <Error Text="SID ROMs not found at '$(_RomsDir)'."
+           Condition="'$(_NativesReady)' != 'true' and '$(_AnyBuildNative)' == 'true' and '@(_Roms)' == ''" />
+    <Error Text="libRemuxer native DLLs not found at '$(_LibOut)'. Build libRemuxer (x64|$(Configuration)) first."
+           Condition="'$(_NativesReady)' != 'true' and '$(_AnyBuildNative)' == 'true' and '@(_LibDlls)' == ''" />
+    <Error Text="libopenmpt DLLs not found at '$(_OpenMptDlls)'. Build libopenmpt ($(Configuration)|amd64) first."
+           Condition="'$(_NativesReady)' != 'true' and '$(_AnyBuildNative)' == 'true' and '@(_OpenMpt)' == ''" />
+    <Copy SourceFiles="@(_Roms)" DestinationFiles="@(_Roms->'$(_OutDir)roms\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" Condition="'$(_NativesReady)' == 'true'" />
+    <Copy SourceFiles="@(_LibDlls)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" Condition="'$(_NativesReady)' == 'true'" />
+    <Copy SourceFiles="@(_LibPdbs)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" Condition="'$(_NativesReady)' == 'true' and '@(_LibPdbs)' != ''" />
+    <Copy SourceFiles="@(_OpenMpt)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" Condition="'$(_NativesReady)' == 'true'" />
   </Target>
 
 </Project>

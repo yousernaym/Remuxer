@@ -19,10 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Unit tests only need the managed Remuxer assembly; skip native DLL packaging. -->
-    <ProjectReference Include="..\Remuxer\Remuxer.csproj">
-      <AdditionalProperties>SkipRemuxerNativeCopy=true</AdditionalProperties>
-    </ProjectReference>
+    <!--
+      Same global properties as the sln's Remuxer build (no AdditionalProperties) so MSBuild
+      shares one project instance / output. CopyNativeOutputs soft-skips when natives are absent.
+    -->
+    <ProjectReference Include="..\Remuxer\Remuxer.csproj" />
     <ProjectReference Include="..\..\midiLib\midilib.csproj" />
   </ItemGroup>
 
