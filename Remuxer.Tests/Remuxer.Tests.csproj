@@ -19,7 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Remuxer\Remuxer.csproj" />
+    <!-- Unit tests only need the managed Remuxer assembly; skip native DLL packaging. -->
+    <ProjectReference Include="..\Remuxer\Remuxer.csproj">
+      <AdditionalProperties>SkipRemuxerNativeCopy=true</AdditionalProperties>
+    </ProjectReference>
     <ProjectReference Include="..\..\midiLib\midilib.csproj" />
   </ItemGroup>
 

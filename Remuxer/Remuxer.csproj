@@ -12,28 +12,42 @@
     <!-- Visual Music's post-build copies from bin\<Config>\ (no TFM subfolder); keep the old flat layout. -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Remuxer.Tests" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <!--
-      Use $(MSBuildProjectDirectory)/$(OutputPath) instead of the VS macros $(ProjectDir)/$(TargetDir):
-      in SDK-style projects the latter are defined by the implicit SDK targets, which are imported AFTER
-      this project body is evaluated, so they bake in as empty here and xcopy fails with exit code 4.
-    -->
-    <!--
-      Unit tests build this managed project without first building the native solution. Keep the
-      executable build usable in that case: copy each native group only when it exists. A full
-      solution build still produces these files before this project and packages them as before.
-    -->
-    <PostBuildEvent>xcopy "$(MSBuildProjectDirectory)\..\libRemuxer\roms" "$(MSBuildProjectDirectory)\$(OutputPath)roms" /D /Y /S /I
-if exist "$(MSBuildProjectDirectory)\..\libRemuxer\x64\$(Configuration)\*.dll" xcopy "$(MSBuildProjectDirectory)\..\libRemuxer\x64\$(Configuration)\*.dll" "$(MSBuildProjectDirectory)\$(OutputPath)" /D /YI
-if exist "$(MSBuildProjectDirectory)\..\libRemuxer\x64\$(Configuration)\*.pdb" xcopy "$(MSBuildProjectDirectory)\..\libRemuxer\x64\$(Configuration)\*.pdb" "$(MSBuildProjectDirectory)\$(OutputPath)" /D /YI
-if exist "$(MSBuildProjectDirectory)\..\libRemuxer\openmpt\bin\$(Configuration)\vs2022-win10-static\amd64\*.dll" xcopy "$(MSBuildProjectDirectory)\..\libRemuxer\openmpt\bin\$(Configuration)\vs2022-win10-static\amd64\*.dll" "$(MSBuildProjectDirectory)\$(OutputPath)" /D /Y</PostBuildEvent>
-  </PropertyGroup>
+  <!--
+    Use $(MSBuildProjectDirectory)/$(OutputPath) instead of the VS macros $(ProjectDir)/$(TargetDir):
+    in SDK-style projects the latter are defined by the implicit SDK targets, which are imported AFTER
+    this project body is evaluated, so they bake in as empty here and xcopy fails with exit code 4.
+
+    Native DLL copies must fail loudly when missing: VisualMusic packages bin\$(Configuration)\
+    wholesale into the app remuxer folder. Soft-skip only when Remuxer.Tests builds this project
+    without natives (SkipRemuxerNativeCopy=true via AdditionalProperties).
+  -->
+  <Target Name="CopyNativeOutputs" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipRemuxerNativeCopy)' != 'true'">
+    <PropertyGroup>
+      <_OutDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(OutputPath)'))</_OutDir>
+      <_LibOut>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\libRemuxer\x64\$(Configuration)'))</_LibOut>
+      <_OpenMptDlls>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\libRemuxer\openmpt\bin\$(Configuration)\vs2022-win10-static\amd64'))</_OpenMptDlls>
+      <_RomsDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\libRemuxer\roms'))</_RomsDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Roms Include="$(_RomsDir)\**\*" />
+      <_LibDlls Include="$(_LibOut)\*.dll" />
+      <_LibPdbs Include="$(_LibOut)\*.pdb" />
+      <_OpenMpt Include="$(_OpenMptDlls)\*.dll" />
+    </ItemGroup>
+    <Error Text="SID ROMs not found at '$(_RomsDir)'." Condition="'@(_Roms)' == ''" />
+    <Error Text="libRemuxer native DLLs not found at '$(_LibOut)'. Build libRemuxer (x64|$(Configuration)) first, or set SkipRemuxerNativeCopy=true for managed-only unit builds." Condition="'@(_LibDlls)' == ''" />
+    <Error Text="libopenmpt DLLs not found at '$(_OpenMptDlls)'. Build libopenmpt ($(Configuration)|amd64) first, or set SkipRemuxerNativeCopy=true for managed-only unit builds." Condition="'@(_OpenMpt)' == ''" />
+    <Copy SourceFiles="@(_Roms)" DestinationFiles="@(_Roms->'$(_OutDir)roms\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_LibDlls)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_LibPdbs)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" Condition="'@(_LibPdbs)' != ''" />
+    <Copy SourceFiles="@(_OpenMpt)" DestinationFolder="$(_OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>
