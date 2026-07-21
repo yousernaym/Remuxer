@@ -20,27 +20,21 @@ namespace Remuxer.Tests
 
         static string FindRemuxerExe()
         {
-            // Prefer the Remuxer project output next to this repo; fall back to walking for Remuxer.exe
-            // that has libRemuxer.dll beside it.
-            string[] candidates =
-            {
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Remuxer", "bin", "Debug", "Remuxer.exe")),
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Remuxer", "bin", "Release", "Remuxer.exe")),
-            };
-            foreach (var c in candidates)
-            {
-                if (File.Exists(c) && File.Exists(Path.Combine(Path.GetDirectoryName(c), "libRemuxer.dll")))
-                    return c;
-            }
+            // Prefer Remuxer/bin/{Debug,Release}/ next to this checkout. Walk ancestors checking only
+            // that fixed relative path (File.Exists is cheap and safe). Never EnumerateFiles with
+            // AllDirectories: that eventually hits the drive root, throws UnauthorizedAccessException
+            // on protected folders, and can latch onto an unrelated Remuxer.exe elsewhere on the disk.
+            static bool IsUsable(string exe) =>
+                File.Exists(exe)
+                && File.Exists(Path.Combine(Path.GetDirectoryName(exe)!, "libRemuxer.dll"));
 
             for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
             {
-                foreach (var exe in Directory.EnumerateFiles(dir.FullName, "Remuxer.exe", SearchOption.AllDirectories))
+                foreach (var config in new[] { "Debug", "Release" })
                 {
-                    if (exe.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (File.Exists(Path.Combine(Path.GetDirectoryName(exe), "libRemuxer.dll")))
-                        return exe;
+                    string candidate = Path.Combine(dir.FullName, "Remuxer", "bin", config, "Remuxer.exe");
+                    if (IsUsable(candidate))
+                        return candidate;
                 }
             }
 
