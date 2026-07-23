@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Remuxer
 {
@@ -9,7 +8,9 @@ namespace Remuxer
         public static extern void InitLib();
         [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "closeLib")]
         public static extern void CloseLib();
-        [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, EntryPoint = "beginProcessing")]
+        // Path fields in Args are UTF-8 (LPUTF8Str). Default ANSI marshalling corrupts non-ASCII
+        // paths (e.g. under a non-Latin user profile).
+        [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "beginProcessing")]
         public static extern bool BeginProcessing(ref Args a);
         [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "process")]
         public static extern float Process();
@@ -17,7 +18,9 @@ namespace Remuxer
         public static extern void EndProcessing();
         [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getNumTrackAudioFiles")]
         public static extern int GetNumTrackAudioFiles();
-        [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, EntryPoint = "getTrackAudioFile")]
-        public static extern bool GetTrackAudioFile(int index, out int midiTrack, out int channel, StringBuilder path, int maxLength);
+        // Native writes a UTF-8 path into the caller buffer (nul-terminated).
+        [DllImport("libRemuxer.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getTrackAudioFile")]
+        public static extern bool GetTrackAudioFile(int index, out int midiTrack, out int channel,
+            [Out] byte[] pathUtf8, int maxLength);
     }
 }

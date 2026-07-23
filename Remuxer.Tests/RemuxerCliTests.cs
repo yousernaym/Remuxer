@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
@@ -54,6 +55,8 @@ namespace Remuxer.Tests
                 WorkingDirectory = Path.GetDirectoryName(exe),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
@@ -174,6 +177,72 @@ namespace Remuxer.Tests
             finally
             {
                 try { Directory.Delete(outDir, true); } catch { }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(ConversionFixtures))]
+        [Trait("Category", "Integration")]
+        public void Converts_fixture_under_non_ascii_paths(string fixtureName, string[] extraArgs)
+        {
+            // Copy input + write outputs under a non-ASCII directory so ANSI marshalling /
+            // narrow CRT opens fail. Exercises Remuxer.exe → libRemuxer UTF-8 path handling
+            // for every format reader (Mod / HVL / SID).
+            using var dir = TestFiles.TempPath.NonAsciiDirectory("vm_remuxer_utf8_");
+            string input = Path.Combine(dir.Path, fixtureName);
+            File.Copy(TestFiles.PathTo(fixtureName), input);
+            string midi = Path.Combine(dir.Path, "out.mid");
+            string wav = Path.Combine(dir.Path, "out.wav");
+
+            var args = new List<string> { input, "-m" + midi, "-a" + wav };
+            args.AddRange(extraArgs);
+
+            var (code, stdout, stderr) = RunRemuxer(args.ToArray());
+            Assert.True(code == 0, $"exit {code}\nstdout:\n{stdout}\nstderr:\n{stderr}");
+            Assert.True(File.Exists(midi), "midi missing under non-ASCII path");
+            Assert.True(File.Exists(wav), "wav missing under non-ASCII path");
+            Assert.True(new FileInfo(midi).Length > 0);
+            Assert.True(new FileInfo(wav).Length > 0);
+
+            if (!fixtureName.EndsWith(".mod", StringComparison.OrdinalIgnoreCase))
+            {
+                var song = new Song();
+                song.OpenMidiFile(midi);
+                int noteCount = song.Tracks.Sum(t => t.Notes.Count);
+                Assert.True(noteCount > 0, "expected at least one note in remuxed MIDI");
+            }
+            else
+            {
+                Assert.True(new FileInfo(midi).Length >= 14, "expected at least an MThd header");
+            }
+        }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Track_audio_under_non_ascii_paths()
+        {
+            using var dir = TestFiles.TempPath.NonAsciiDirectory("vm_remuxer_t_utf8_");
+            string input = Path.Combine(dir.Path, "minimal.ahx");
+            File.Copy(TestFiles.PathTo("minimal.ahx"), input);
+            string midi = Path.Combine(dir.Path, "out.mid");
+            string wav = Path.Combine(dir.Path, "out.wav");
+            string trackBase = Path.Combine(dir.Path, "track");
+
+            var (code, stdout, stderr) = RunRemuxer(input, "-m" + midi, "-a" + wav, "-t" + trackBase);
+            Assert.True(code == 0, $"exit {code}\n{stdout}\n{stderr}");
+
+            var lines = stdout.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var trackLines = lines.Where(l =>
+                TrackAudioRegex.IsMatch(l) || TrackVoiceAudioRegex.IsMatch(l)).ToList();
+            Assert.NotEmpty(trackLines);
+            foreach (var line in trackLines)
+            {
+                var audio = TrackAudioRegex.Match(line);
+                var voice = TrackVoiceAudioRegex.Match(line);
+                Assert.True(audio.Success || voice.Success, line);
+                string path = audio.Success ? audio.Groups[2].Value : voice.Groups[3].Value;
+                Assert.Contains("日本語", path, StringComparison.Ordinal);
+                Assert.True(File.Exists(path), "track wav missing: " + path);
             }
         }
     }

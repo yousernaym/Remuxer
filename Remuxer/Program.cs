@@ -20,6 +20,11 @@ namespace Remuxer
         /// </summary>
         static int Main(string[] cmdLineArgs)
         {
+            // TrackAudio / TrackVoiceAudio lines may contain non-ASCII paths. When stdout is
+            // redirected (Visual Music, Integration tests), the default console code page would
+            // corrupt them; emit UTF-8 so the parent can decode with StandardOutputEncoding.
+            Console.OutputEncoding = Encoding.UTF8;
+
             if (cmdLineArgs.Length == 0)
             {
                 ShowUsage();
@@ -227,15 +232,17 @@ namespace Remuxer
                 //  "TrackAudio: <miditrack>|<path>"                per-channel mode (assign as Filename)
                 //  "TrackVoiceAudio: <miditrack>|<channel>|<path>" per-instrument mode (shared channel WAV)
                 int numTrackFiles = LibRemuxer.GetNumTrackAudioFiles();
-                var sb = new StringBuilder(1024);
+                var pathBuf = new byte[1024];
                 for (int i = 0; i < numTrackFiles; i++)
                 {
-                    if (LibRemuxer.GetTrackAudioFile(i, out int midiTrack, out int channel, sb, sb.Capacity))
+                    if (LibRemuxer.GetTrackAudioFile(i, out int midiTrack, out int channel, pathBuf, pathBuf.Length))
                     {
+                        int nul = Array.IndexOf(pathBuf, (byte)0);
+                        string path = Encoding.UTF8.GetString(pathBuf, 0, nul < 0 ? pathBuf.Length : nul);
                         if (channel < 0)
-                            Console.Out.WriteLine($"TrackAudio: {midiTrack}|{sb}");
+                            Console.Out.WriteLine($"TrackAudio: {midiTrack}|{path}");
                         else
-                            Console.Out.WriteLine($"TrackVoiceAudio: {midiTrack}|{channel}|{sb}");
+                            Console.Out.WriteLine($"TrackVoiceAudio: {midiTrack}|{channel}|{path}");
                     }
                 }
             }
@@ -295,13 +302,17 @@ namespace Remuxer
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct Args
     {
+        [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string inputPath;
+        [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string audioPath;
+        [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string midiPath;
         public bool modInsTrack;
         public float songLengthS;
         public int subSong;
         public int numSubSongs; //out parameter
+        [MarshalAs(UnmanagedType.LPUTF8Str)]
         public string trackAudioPath; //base path for per-track WAVs ("" = disabled); mirrors native offset 40
         public bool suppressErrors; //unread by native; stays last
     }
