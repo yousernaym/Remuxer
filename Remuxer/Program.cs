@@ -22,8 +22,8 @@ namespace Remuxer
         {
             // TrackAudio / TrackVoiceAudio lines may contain non-ASCII paths. When stdout is
             // redirected (Visual Music, Integration tests), the default console code page would
-            // corrupt them; emit UTF-8 so the parent can decode with StandardOutputEncoding.
-            Console.OutputEncoding = Encoding.UTF8;
+            // corrupt them; emit UTF-8 without BOM so the parent can decode with StandardOutputEncoding.
+            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
             if (cmdLineArgs.Length == 0)
             {
@@ -232,7 +232,8 @@ namespace Remuxer
                 //  "TrackAudio: <miditrack>|<path>"                per-channel mode (assign as Filename)
                 //  "TrackVoiceAudio: <miditrack>|<channel>|<path>" per-instrument mode (shared channel WAV)
                 int numTrackFiles = LibRemuxer.GetNumTrackAudioFiles();
-                var pathBuf = new byte[1024];
+                // Must match libRemuxer.h MAX_PATH_LENGTH (UTF-8 bytes including NUL).
+                var pathBuf = new byte[MaxPathUtf8Bytes];
                 for (int i = 0; i < numTrackFiles; i++)
                 {
                     if (LibRemuxer.GetTrackAudioFile(i, out int midiTrack, out int channel, pathBuf, pathBuf.Length))
@@ -247,6 +248,9 @@ namespace Remuxer
                 }
             }
         }
+
+        // Keep in sync with libRemuxer.h MAX_PATH_LENGTH.
+        internal const int MaxPathUtf8Bytes = 32768;
 
         static bool IsCancelRequested(string cancelPath) =>
             !string.IsNullOrWhiteSpace(cancelPath) && File.Exists(cancelPath);

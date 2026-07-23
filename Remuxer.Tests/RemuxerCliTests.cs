@@ -55,8 +55,8 @@ namespace Remuxer.Tests
                 WorkingDirectory = Path.GetDirectoryName(exe),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8,
+                StandardOutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                StandardErrorEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
