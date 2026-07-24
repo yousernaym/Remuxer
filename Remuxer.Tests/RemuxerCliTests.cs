@@ -124,20 +124,11 @@ namespace Remuxer.Tests
                 Assert.True(new FileInfo(midi).Length > 0);
                 Assert.True(new FileInfo(wav).Length > 0);
 
-                // One-note AHX/HVL/SID fixtures yield parseable notes. The synthetic minimal.mod
-                // is mainly a ModReader/openmpt smoke test (WAV + MIDI header); note extraction
-                // from that tiny pattern is not guaranteed.
-                if (!fixtureName.EndsWith(".mod", StringComparison.OrdinalIgnoreCase))
-                {
-                    var song = new Song();
-                    song.OpenMidiFile(midi);
-                    int noteCount = song.Tracks.Sum(t => t.Notes.Count);
-                    Assert.True(noteCount > 0, "expected at least one note in remuxed MIDI");
-                }
-                else
-                {
-                    Assert.True(new FileInfo(midi).Length >= 14, "expected at least an MThd header");
-                }
+                // Each minimal.* fixture includes at least one note for remux note extraction.
+                var song = new Song();
+                song.OpenMidiFile(midi);
+                int noteCount = song.Tracks.Sum(t => t.Notes.Count);
+                Assert.True(noteCount > 0, "expected at least one note in remuxed MIDI");
             }
             finally
             {
@@ -149,7 +140,7 @@ namespace Remuxer.Tests
         [Trait("Category", "Integration")]
         public void Track_audio_lines_match_visual_music_regexes()
         {
-            // minimal.ahx has audible channels; minimal.mod's synthetic pattern often yields none.
+            // Use AHX: its channels produce TrackAudio stdout lines under -t.
             string input = TestFiles.PathTo("minimal.ahx");
             string outDir = Path.Combine(Path.GetTempPath(), "vm_remuxer_t_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(outDir);
@@ -204,17 +195,10 @@ namespace Remuxer.Tests
             Assert.True(new FileInfo(midi).Length > 0);
             Assert.True(new FileInfo(wav).Length > 0);
 
-            if (!fixtureName.EndsWith(".mod", StringComparison.OrdinalIgnoreCase))
-            {
-                var song = new Song();
-                song.OpenMidiFile(midi);
-                int noteCount = song.Tracks.Sum(t => t.Notes.Count);
-                Assert.True(noteCount > 0, "expected at least one note in remuxed MIDI");
-            }
-            else
-            {
-                Assert.True(new FileInfo(midi).Length >= 14, "expected at least an MThd header");
-            }
+            var song = new Song();
+            song.OpenMidiFile(midi);
+            int noteCount = song.Tracks.Sum(t => t.Notes.Count);
+            Assert.True(noteCount > 0, "expected at least one note in remuxed MIDI");
         }
 
         [Fact]
