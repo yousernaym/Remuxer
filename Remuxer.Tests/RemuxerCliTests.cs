@@ -245,5 +245,88 @@ namespace Remuxer.Tests
                 Assert.True(File.Exists(path), "track wav missing: " + path);
             }
         }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Cancel_signal_exits_with_code_2()
+        {
+            // Pre-create the cancel file so IsCancelRequested trips on the first process loop.
+            string input = TestFiles.PathTo("minimal.ahx");
+            using var dir = TestFiles.TempPath.Directory("vm_remuxer_cancel_");
+            string midi = Path.Combine(dir.Path, "out.mid");
+            string wav = Path.Combine(dir.Path, "out.wav");
+            string cancel = Path.Combine(dir.Path, "cancel.signal");
+            File.WriteAllText(cancel, "cancel");
+
+            var (code, stdout, stderr) = RunRemuxer(input, "-m" + midi, "-a" + wav, "-c" + cancel);
+            Assert.True(code == 2, $"expected exit 2, got {code}\nstdout:\n{stdout}\nstderr:\n{stderr}");
+        }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Per_instrument_mode_emits_TrackVoiceAudio_lines()
+        {
+            string input = TestFiles.PathTo("minimal.ahx");
+            using var dir = TestFiles.TempPath.Directory("vm_remuxer_voice_");
+            string midi = Path.Combine(dir.Path, "out.mid");
+            string wav = Path.Combine(dir.Path, "out.wav");
+            string trackBase = Path.Combine(dir.Path, "track");
+
+            var (code, stdout, stderr) = RunRemuxer(input, "-i", "-m" + midi, "-a" + wav, "-t" + trackBase);
+            Assert.True(code == 0, $"exit {code}\nstdout:\n{stdout}\nstderr:\n{stderr}");
+
+            var lines = stdout.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var voiceLines = lines.Where(l => TrackVoiceAudioRegex.IsMatch(l)).ToList();
+            var channelLines = lines.Where(l => TrackAudioRegex.IsMatch(l)).ToList();
+            Assert.NotEmpty(voiceLines);
+            Assert.Empty(channelLines);
+            foreach (var line in voiceLines)
+            {
+                var voice = TrackVoiceAudioRegex.Match(line);
+                Assert.True(voice.Success, line);
+                Assert.True(File.Exists(voice.Groups[3].Value), "track wav missing: " + voice.Groups[3].Value);
+            }
+        }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Unparseable_input_exits_1_with_stderr_unless_suppressErrors()
+        {
+            using var dir = TestFiles.TempPath.Directory("vm_remuxer_bad_");
+            string garbage = Path.Combine(dir.Path, "not-music.bin");
+            File.WriteAllBytes(garbage, new byte[] { 0x00, 0x01, 0x02, 0x03, 0xFF });
+            string midi = Path.Combine(dir.Path, "out.mid");
+            string wav = Path.Combine(dir.Path, "out.wav");
+
+            var (code, _, stderr) = RunRemuxer(garbage, "-m" + midi, "-a" + wav);
+            Assert.Equal(1, code);
+            Assert.Contains("Couldn't parse", stderr, StringComparison.Ordinal);
+
+            var (codeSuppressed, _, stderrSuppressed) = RunRemuxer(garbage, "-e", "-m" + midi, "-a" + wav);
+            Assert.Equal(1, codeSuppressed);
+            Assert.DoesNotContain("Couldn't parse", stderrSuppressed, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Invalid_midi_output_path_exits_nonzero()
+        {
+            string input = TestFiles.PathTo("minimal.ahx");
+            // Parent directory does not exist → CheckPath / File.Create fails.
+            string badMidi = Path.Combine(Path.GetTempPath(), "vm_remuxer_no_such_dir_" + Guid.NewGuid().ToString("N"), "out.mid");
+            var (code, _, stderr) = RunRemuxer(input, "-m" + badMidi);
+            Assert.NotEqual(0, code);
+            Assert.Contains("Invalid -m path", stderr, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public void Empty_argv_prints_usage_and_exits_0()
+        {
+            var (code, stdout, stderr) = RunRemuxer();
+            Assert.Equal(0, code);
+            Assert.Contains("Syntax: remuxer", stdout, StringComparison.Ordinal);
+            Assert.True(string.IsNullOrEmpty(stderr) || !stderr.Contains("Error:", StringComparison.Ordinal));
+        }
     }
 }

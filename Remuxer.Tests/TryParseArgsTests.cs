@@ -93,5 +93,46 @@ namespace Remuxer.Tests
                 Thread.CurrentThread.CurrentCulture = prev;
             }
         }
+
+        [Fact]
+        public void Whitespace_only_input_fails()
+        {
+            Assert.False(Program.TryParseArgs(
+                new[] { "   " },
+                out _, out _, out _, out _, out string error));
+            Assert.Contains("No input file", error);
+        }
+
+        [Fact]
+        public void Empty_argv_succeeds_with_null_input()
+        {
+            // Main handles Length==0 before TryParseArgs; parser itself accepts empty arrays.
+            Assert.True(Program.TryParseArgs(
+                System.Array.Empty<string>(),
+                out var args, out string cancel, out bool midi, out bool audio, out string error));
+            Assert.Null(error);
+            Assert.Null(args.inputPath);
+            Assert.Null(cancel);
+            Assert.False(midi);
+            Assert.False(audio);
+        }
+
+        [Fact]
+        public void Cancel_flag_without_path_leaves_cancel_null()
+        {
+            Assert.True(Program.TryParseArgs(
+                new[] { "in.mod", "-c" },
+                out _, out string cancel, out _, out _, out _));
+            Assert.Null(cancel);
+        }
+
+        [Fact]
+        public void Track_flag_without_path_leaves_track_path_null()
+        {
+            Assert.True(Program.TryParseArgs(
+                new[] { "in.mod", "-t" },
+                out var args, out _, out _, out _, out _));
+            Assert.Null(args.trackAudioPath);
+        }
     }
 }
