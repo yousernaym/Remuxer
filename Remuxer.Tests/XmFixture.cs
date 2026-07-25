@@ -88,46 +88,61 @@ namespace Remuxer.Tests
             if (mod.NumPatterns < 1)
                 throw new InvalidDataException("XM has no patterns.");
 
-            // Pattern 0 header: length(4), packing(1), rows(2), dataSize(2)
-            uint pHeaderLen = BitConverter.ToUInt32(b, afterHeader);
-            ushort rows = BitConverter.ToUInt16(b, afterHeader + 5);
-            ushort dataSize = BitConverter.ToUInt16(b, afterHeader + 7);
-            int pdata = afterHeader + (int)pHeaderLen;
-
-            mod.Pattern0Rows = rows;
-            mod.Pattern0 = new Cell[rows, mod.Channels];
-            int i = pdata;
-            int end = pdata + dataSize;
-            for (int row = 0; row < rows; row++)
+            // Walk every pattern so instruments start after pattern N-1 (not only pattern 0).
+            // Only pattern 0 is decoded; later patterns are skipped by header + packed size.
+            int patternPos = afterHeader;
+            for (int p = 0; p < mod.NumPatterns; p++)
             {
-                for (int ch = 0; ch < mod.Channels; ch++)
+                if (patternPos + 9 > b.Length)
+                    throw new InvalidDataException("Pattern header truncated.");
+                // Pattern header: length(4), packing(1), rows(2), dataSize(2)
+                uint pHeaderLen = BitConverter.ToUInt32(b, patternPos);
+                ushort rows = BitConverter.ToUInt16(b, patternPos + 5);
+                ushort dataSize = BitConverter.ToUInt16(b, patternPos + 7);
+                int pdata = patternPos + (int)pHeaderLen;
+                int end = pdata + dataSize;
+                if (end > b.Length)
+                    throw new InvalidDataException("Pattern data truncated.");
+
+                if (p == 0)
                 {
-                    if (i >= end)
-                        throw new InvalidDataException("Pattern data truncated.");
-                    byte note = 0, ins = 0, vol = 0, fx = 0, param = 0;
-                    byte msb = b[i];
-                    if ((msb & 0x80) != 0)
+                    mod.Pattern0Rows = rows;
+                    mod.Pattern0 = new Cell[rows, mod.Channels];
+                    int i = pdata;
+                    for (int row = 0; row < rows; row++)
                     {
-                        i++;
-                        if ((msb & 1) != 0) note = b[i++];
-                        if ((msb & 2) != 0) ins = b[i++];
-                        if ((msb & 4) != 0) vol = b[i++];
-                        if ((msb & 8) != 0) fx = b[i++];
-                        if ((msb & 16) != 0) param = b[i++];
+                        for (int ch = 0; ch < mod.Channels; ch++)
+                        {
+                            if (i >= end)
+                                throw new InvalidDataException("Pattern data truncated.");
+                            byte note = 0, ins = 0, vol = 0, fx = 0, param = 0;
+                            byte msb = b[i];
+                            if ((msb & 0x80) != 0)
+                            {
+                                i++;
+                                if ((msb & 1) != 0) note = b[i++];
+                                if ((msb & 2) != 0) ins = b[i++];
+                                if ((msb & 4) != 0) vol = b[i++];
+                                if ((msb & 8) != 0) fx = b[i++];
+                                if ((msb & 16) != 0) param = b[i++];
+                            }
+                            else
+                            {
+                                note = b[i++];
+                                ins = b[i++];
+                                vol = b[i++];
+                                fx = b[i++];
+                                param = b[i++];
+                            }
+                            mod.Pattern0[row, ch] = new Cell(note, ins, vol, fx, param);
+                        }
                     }
-                    else
-                    {
-                        note = b[i++];
-                        ins = b[i++];
-                        vol = b[i++];
-                        fx = b[i++];
-                        param = b[i++];
-                    }
-                    mod.Pattern0[row, ch] = new Cell(note, ins, vol, fx, param);
                 }
+
+                patternPos = end;
             }
 
-            int insStart = end;
+            int insStart = patternPos;
             for (int insIndex = 1; insIndex <= mod.NumInstruments; insIndex++)
             {
                 if (insStart + 29 > b.Length)

@@ -51,7 +51,7 @@ namespace Remuxer.Tests
 
             Assert.Equal(6, mod.Speed);
             Assert.Equal(16, mod.Channels);
-            Assert.True(mod.NumPatterns >= 1);
+            Assert.Equal(1, mod.NumPatterns); // FX.XM is single-pattern; XmFixture only asserts on pattern 0
             Assert.Equal(2, mod.NumInstruments);
             // Linear freq table bit unused by our asserts; speed/tempo are what matter.
             Assert.Equal(125, mod.Tempo);
