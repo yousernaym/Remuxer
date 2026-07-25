@@ -17,7 +17,9 @@ namespace Remuxer.Tests
         const int MidiTicksPerBeat = 480;
         const int MidiPerModTick = MidiTicksPerBeat / 24; // XM 24 tpb → 20 MIDI ticks per module tick
         const int Speed = 6;
-        // Ch1 fixture note (XM) and remuxed MIDI pitch (OpenMPT XM load is +1 octave vs file note).
+        // Ch1: sample-end duration depends on pitch. OpenMPT's XM loader adds +12 to file notes
+        // (Load_xm.cpp ReadXMPatterns: `m.note += 12`), then ModReader emits MIDI = openmptNote - 1
+        // → file note 50 → OpenMPT 62 → MIDI 61.
         const int Ch1XmNote = 50;
         const int Ch1MidiPitch = 61;
 
@@ -43,7 +45,6 @@ namespace Remuxer.Tests
         static XmFixture.Cell C(XmFixture.Module mod, int row, int ch) => XmFixture.CellAt(mod, row, ch);
 
         [Fact]
-        [Trait("Category", "Integration")]
         public void Fx_xm_fixture_matches_described_pattern_and_speed()
         {
             var mod = XmFixture.Load(TestFiles.PathTo("FX.XM"));
