@@ -17,9 +17,21 @@ namespace Remuxer.Tests
         const int MidiTicksPerBeat = 480;
         const int MidiPerModTick = MidiTicksPerBeat / 24; // XM 24 tpb → 20 MIDI ticks per module tick
         const int Speed = 6;
+        // Ch1 fixture note (XM) and remuxed MIDI pitch (OpenMPT XM load is +1 octave vs file note).
+        const int Ch1XmNote = 50;
+        const int Ch1MidiPitch = 61;
 
-        static int ModStart(Note n) => n.start / MidiPerModTick;
-        static int ModDuration(Note n) => (n.stop - n.start) / MidiPerModTick;
+        static int ModStart(Note n)
+        {
+            Assert.Equal(0, n.start % MidiPerModTick);
+            return n.start / MidiPerModTick;
+        }
+
+        static int ModDuration(Note n)
+        {
+            Assert.Equal(0, (n.stop - n.start) % MidiPerModTick);
+            return (n.stop - n.start) / MidiPerModTick;
+        }
 
         static List<Note> ChannelNotes(Song song, int channel)
         {
@@ -52,8 +64,9 @@ namespace Remuxer.Tests
 
             // Ch0: note + EC1 on row 0
             AssertNoteCell(C(mod, 0, 0), ins: 1, fx: 0xE, param: 0xC1);
-            // Ch1: note with instrument 2
+            // Ch1: note with instrument 2 (short non-looped sample; pitch fixed for sample-end duration)
             AssertNoteCell(C(mod, 0, 1), ins: 2, fx: 0, param: 0);
+            Assert.Equal(Ch1XmNote, C(mod, 0, 1).Note);
             // Ch2: note; volume 0 on next row (XM vol column 0x10 = set vol 0)
             AssertNoteCell(C(mod, 0, 2), ins: 1, fx: 0, param: 0);
             Assert.Equal(0x10, C(mod, 1, 2).Vol);
@@ -129,7 +142,6 @@ namespace Remuxer.Tests
             using var dir = TestFiles.TempPath.Directory("vm_remuxer_fx_");
             string midi = Path.Combine(dir.Path, "out.mid");
 
-            // MIDI-only: mixdown with play.at_end=continue does not terminate for this module.
             var (code, stdout, stderr) = RemuxerProcess.Run(input, "-m" + midi);
             Assert.True(code == 0, $"exit {code}\nstdout:\n{stdout}\nstderr:\n{stderr}");
             Assert.True(File.Exists(midi), "midi missing");
@@ -149,6 +161,7 @@ namespace Remuxer.Tests
             {
                 var notes = ChannelNotes(song, 1);
                 Assert.Single(notes);
+                Assert.Equal(Ch1MidiPitch, notes[0].pitch);
                 Assert.Equal(1, ModDuration(notes[0]));
             }
             // Ch2: Volume 0 on next row → duration 6
@@ -173,7 +186,7 @@ namespace Remuxer.Tests
             // Ch5: note dur 6, silence 6, then same pitch
             {
                 var notes = ChannelNotes(song, 5);
-                Assert.True(notes.Count >= 2, "expected retriggered note");
+                Assert.Equal(2, notes.Count);
                 Assert.Equal(6, ModDuration(notes[0]));
                 int silence = ModStart(notes[1]) - (ModStart(notes[0]) + ModDuration(notes[0]));
                 Assert.Equal(6, silence);
@@ -209,7 +222,7 @@ namespace Remuxer.Tests
             // Ch12: new note ends previous → first dur 6, second at module tick 6
             {
                 var notes = ChannelNotes(song, 12);
-                Assert.True(notes.Count >= 2);
+                Assert.Equal(2, notes.Count);
                 Assert.Equal(6, ModDuration(notes[0]));
                 Assert.Equal(Speed, ModStart(notes[1])); // row 1 @ speed 6
             }
