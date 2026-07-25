@@ -1,86 +1,21 @@
 using Midi;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Remuxer.Tests
 {
     public class RemuxerCliTests
     {
-        const int RemuxerTimeoutMs = 120_000;
-
         static readonly Regex ProgressRegex = new Regex(@"^Progress:\s*(\d+)%", RegexOptions.Compiled);
         static readonly Regex TrackAudioRegex = new Regex(@"^TrackAudio:\s*(\d+)\|(.+)$", RegexOptions.Compiled);
         static readonly Regex TrackVoiceAudioRegex = new Regex(@"^TrackVoiceAudio:\s*(\d+)\|(\d+)\|(.+)$", RegexOptions.Compiled);
 
-        static string FindRemuxerExe()
-        {
-            // Prefer Remuxer/bin/{Debug,Release}/ next to this checkout. Walk ancestors checking only
-            // that fixed relative path (File.Exists is cheap and safe). Never EnumerateFiles with
-            // AllDirectories: that eventually hits the drive root, throws UnauthorizedAccessException
-            // on protected folders, and can latch onto an unrelated Remuxer.exe elsewhere on the disk.
-            static bool IsUsable(string exe) =>
-                File.Exists(exe)
-                && File.Exists(Path.Combine(Path.GetDirectoryName(exe)!, "libRemuxer.dll"));
-
-            for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-            {
-                foreach (var config in new[] { "Debug", "Release" })
-                {
-                    string candidate = Path.Combine(dir.FullName, "Remuxer", "bin", config, "Remuxer.exe");
-                    if (IsUsable(candidate))
-                        return candidate;
-                }
-            }
-
-            return null;
-        }
-
-        static (int ExitCode, string StdOut, string StdErr) RunRemuxer(params string[] args)
-        {
-            string exe = FindRemuxerExe();
-            if (exe == null)
-                throw new FileNotFoundException(
-                    "Remuxer.exe (+ libRemuxer.dll) not found. Build Remuxer (x64) before Integration tests.");
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = exe,
-                WorkingDirectory = Path.GetDirectoryName(exe),
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                StandardOutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-                StandardErrorEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            foreach (var a in args)
-                psi.ArgumentList.Add(a);
-
-            using var p = Process.Start(psi)
-                ?? throw new InvalidOperationException("Failed to start Remuxer.exe.");
-
-            // Read async so WaitForExit(timeout) can fire if Remuxer hangs with pipes open.
-            Task<string> stdoutTask = p.StandardOutput.ReadToEndAsync();
-            Task<string> stderrTask = p.StandardError.ReadToEndAsync();
-            if (!p.WaitForExit(RemuxerTimeoutMs))
-            {
-                try { p.Kill(entireProcessTree: true); } catch { /* best-effort */ }
-                try { p.WaitForExit(5_000); } catch { }
-                throw new TimeoutException(
-                    $"Remuxer timed out after {RemuxerTimeoutMs / 1000}s. Args: {string.Join(' ', args)}");
-            }
-
-            string stdout = stdoutTask.GetAwaiter().GetResult();
-            string stderr = stderrTask.GetAwaiter().GetResult();
-            return (p.ExitCode, stdout, stderr);
-        }
+        static (int ExitCode, string StdOut, string StdErr) RunRemuxer(params string[] args) =>
+            RemuxerProcess.Run(args);
 
         [Fact]
         [Trait("Category", "Integration")]
