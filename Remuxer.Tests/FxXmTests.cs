@@ -8,7 +8,8 @@ using Xunit;
 namespace Remuxer.Tests
 {
     /// <summary>
-    /// Effect-lane coverage for libRemuxer/test-files/FX.XM.
+    /// Effect-lane MIDI conversion coverage for libRemuxer/test-files/FX.XM.
+    /// Pattern/speed layout is asserted in libRemuxer GoogleTest (FxFixtureTests) via libopenmpt.
     /// Durations are in module ticks; XM resolution is 24 tpb, MIDI conversion uses 480 tpb
     /// → 1 module tick = 20 MIDI ticks.
     /// </summary>
@@ -20,7 +21,6 @@ namespace Remuxer.Tests
         // Ch1: sample-end duration depends on pitch. OpenMPT's XM loader adds +12 to file notes
         // (Load_xm.cpp ReadXMPatterns: `m.note += 12`), then ModReader emits MIDI = openmptNote - 1
         // → file note 50 → OpenMPT 62 → MIDI 61.
-        const int Ch1XmNote = 50;
         const int Ch1MidiPitch = 61;
 
         static int ModStart(Note n)
@@ -40,117 +40,6 @@ namespace Remuxer.Tests
             int track = channel + 1; // track 0 = tempo; channel c → track c+1
             Assert.True(track < song.Tracks.Count, $"missing MIDI track for channel {channel}");
             return song.Tracks[track].Notes.OrderBy(n => n.start).ThenBy(n => n.pitch).ToList();
-        }
-
-        static XmFixture.Cell C(XmFixture.Module mod, int row, int ch) => XmFixture.CellAt(mod, row, ch);
-
-        [Fact]
-        public void Fx_xm_fixture_matches_described_pattern_and_speed()
-        {
-            var mod = XmFixture.Load(TestFiles.PathTo("FX.XM"));
-
-            Assert.Equal(6, mod.Speed);
-            Assert.Equal(18, mod.Channels);
-            Assert.Equal(1, mod.NumPatterns); // FX.XM is single-pattern; XmFixture only asserts on pattern 0
-            Assert.Equal(2, mod.NumInstruments);
-            // Linear freq table bit unused by our asserts; speed/tempo are what matter.
-            Assert.Equal(125, mod.Tempo);
-
-            // Ins1 looped, ins2 short non-looped (sample-end case).
-            Assert.Single(mod.Instruments[1]);
-            Assert.Single(mod.Instruments[2]);
-            Assert.True(mod.Instruments[1][0].Loops, "instrument 1 should loop");
-            Assert.False(mod.Instruments[2][0].Loops, "instrument 2 should not loop");
-            Assert.Equal(10u, mod.Instruments[2][0].Length);
-
-            // Ch0: note + EC1 on row 0
-            AssertNoteCell(C(mod, 0, 0), ins: 1, fx: 0xE, param: 0xC1);
-            // Ch1: note with instrument 2 (short non-looped sample; pitch fixed for sample-end duration)
-            AssertNoteCell(C(mod, 0, 1), ins: 2, fx: 0, param: 0);
-            Assert.Equal(Ch1XmNote, C(mod, 0, 1).Note);
-            // Ch2: note; volume 0 on next row (XM vol column 0x10 = set vol 0)
-            AssertNoteCell(C(mod, 0, 2), ins: 1, fx: 0, param: 0);
-            Assert.Equal(0x10, C(mod, 1, 2).Vol);
-            // Ch3: note + ED1; note-off next row
-            AssertNoteCell(C(mod, 0, 3), ins: 1, fx: 0xE, param: 0xD1);
-            Assert.Equal(XmFixture.NoteKeyOff, C(mod, 1, 3).Note);
-            // Ch4: note; note-off next row
-            AssertNoteCell(C(mod, 0, 4), ins: 1, fx: 0, param: 0);
-            Assert.Equal(XmFixture.NoteKeyOff, C(mod, 1, 4).Note);
-            // Ch5: note; note-off row 1; non-zero instrument row 2
-            AssertNoteCell(C(mod, 0, 5), ins: 1, fx: 0, param: 0);
-            Assert.Equal(XmFixture.NoteKeyOff, C(mod, 1, 5).Note);
-            Assert.True(C(mod, 2, 5).Ins != 0);
-            // Ch6: A02 then A00 × 6; no effect on the following row
-            AssertNoteCell(C(mod, 0, 6), ins: 1, fx: 0xA, param: 0x02);
-            for (int r = 1; r <= 6; r++)
-                Assert.True(C(mod, r, 6).Fx == 0xA && C(mod, r, 6).Param == 0x00, $"ch6 row {r}");
-            AssertNoEffect(C(mod, 7, 6), "ch6 row 7");
-            // Ch7: vol-column slide down 2 (0x62) on note row and following 6 rows; none after
-            AssertNoteCell(C(mod, 0, 7), ins: 1, fx: 0, param: 0);
-            Assert.Equal(0x62, C(mod, 0, 7).Vol);
-            for (int r = 1; r <= 6; r++)
-                Assert.Equal(0x62, C(mod, r, 7).Vol);
-            AssertNoEffect(C(mod, 7, 7), "ch7 row 7");
-            // Ch8: note; 502 next row then 500 × 6; no effect after
-            AssertNoteCell(C(mod, 0, 8), ins: 1, fx: 0, param: 0);
-            Assert.True(C(mod, 1, 8).Fx == 0x5 && C(mod, 1, 8).Param == 0x02);
-            for (int r = 2; r <= 7; r++)
-                Assert.True(C(mod, r, 8).Fx == 0x5 && C(mod, r, 8).Param == 0x00, $"ch8 row {r}");
-            AssertNoEffect(C(mod, 8, 8), "ch8 row 8");
-            // Ch9: note; 602 next row then 600 × 6; no effect after
-            AssertNoteCell(C(mod, 0, 9), ins: 1, fx: 0, param: 0);
-            Assert.True(C(mod, 1, 9).Fx == 0x6 && C(mod, 1, 9).Param == 0x02);
-            for (int r = 2; r <= 7; r++)
-                Assert.True(C(mod, r, 9).Fx == 0x6 && C(mod, r, 9).Param == 0x00, $"ch9 row {r}");
-            AssertNoEffect(C(mod, 8, 9), "ch9 row 8");
-            // Ch10: EB2 then EB0 on following 31 rows; no effect after
-            AssertNoteCell(C(mod, 0, 10), ins: 1, fx: 0xE, param: 0xB2);
-            for (int r = 1; r <= 31; r++)
-                Assert.True(C(mod, r, 10).Fx == 0xE && C(mod, r, 10).Param == 0xB0, $"ch10 row {r}");
-            AssertNoEffect(C(mod, 32, 10), "ch10 row 32");
-            // Ch11: arpeggio 025; note-off next row
-            AssertNoteCell(C(mod, 0, 11), ins: 1, fx: 0x0, param: 0x25);
-            Assert.Equal(XmFixture.NoteKeyOff, C(mod, 1, 11).Note);
-            // Ch12: note on row 0 and row 1
-            AssertNoteCell(C(mod, 0, 12), ins: 1, fx: 0, param: 0);
-            AssertNoteCell(C(mod, 1, 12), ins: 1, fx: 0, param: 0);
-            // Ch13: E92; note-off next row
-            AssertNoteCell(C(mod, 0, 13), ins: 1, fx: 0xE, param: 0x92);
-            Assert.Equal(XmFixture.NoteKeyOff, C(mod, 1, 13).Note);
-            // Ch14: porta retrigger — note rows 0–1; row 1 effect 300; one pitch step up
-            AssertNoteCell(C(mod, 0, 14), ins: 1, fx: 0, param: 0);
-            AssertNoteCell(C(mod, 1, 14), ins: 1, fx: 0x3, param: 0x00);
-            Assert.Equal(C(mod, 0, 14).Note + 1, C(mod, 1, 14).Note);
-            // Ch15: porta retrigger — same as ch14 with effect 500
-            AssertNoteCell(C(mod, 0, 15), ins: 1, fx: 0, param: 0);
-            AssertNoteCell(C(mod, 1, 15), ins: 1, fx: 0x5, param: 0x00);
-            Assert.Equal(C(mod, 0, 15).Note + 1, C(mod, 1, 15).Note);
-            // Ch16: note + vol-column +f on row 0; -f on row1; +1 on row 2.
-            AssertNoteCell(C(mod, 0, 16), ins: 1, fx: 0, param: 0);
-            Assert.Equal(0x7F, C(mod, 0, 16).Vol);
-            Assert.Equal(0x6F, C(mod, 1, 16).Vol);
-            Assert.Equal(0x71, C(mod, 2, 16).Vol);
-
-            // Ch17: note at zero volume then volume +1
-            AssertNoteCell(C(mod, 0, 17), ins: 1, fx: 0, param: 0);
-            Assert.Equal(0x10, C(mod, 0, 17).Vol); // set vol 0
-            Assert.Equal(0x71, C(mod, 1, 17).Vol); //+1
-        }
-
-        /// <summary>Assert a sounding note is present (pitch unconstrained) with the given ins/fx/param.</summary>
-        static void AssertNoteCell(XmFixture.Cell cell, byte ins, byte fx, byte param)
-        {
-            Assert.True(cell.Note > 0 && cell.Note != XmFixture.NoteKeyOff, "expected a note");
-            Assert.Equal(ins, cell.Ins);
-            Assert.Equal(fx, cell.Fx);
-            Assert.Equal(param, cell.Param);
-        }
-
-        /// <summary>Assert effect column and volume column are empty (end of a volume-slide run).</summary>
-        static void AssertNoEffect(XmFixture.Cell cell, string label)
-        {
-            Assert.True(cell.Fx == 0 && cell.Param == 0 && cell.Vol == 0, label + ": expected no effect");
         }
 
         [Fact]
