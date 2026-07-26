@@ -264,17 +264,18 @@ namespace Remuxer.Tests
                 Assert.Equal(Speed, ModStart(notes[1]));
                 Assert.Equal(notes[0].pitch + 1, notes[1].pitch);
             }
-            // Ch16: Clamp volume at <=64, then >=0, then volume + 1: → note-start at tick 12
+            // Ch16: Clamp volume at <=64, then >=0, then volume + 1 → revival on tick 13
+            // (row 2 @ speed 6; normal slides skip the first tick of the row)
             {
                 var notes = ChannelNotes(song, 16);
                 Assert.Equal(0, ModStart(notes[0]));
-                Assert.Equal(12, ModStart(notes[1]));
+                Assert.Equal(13, ModStart(notes[1]));
             }
-            // Ch17: zero-volume note delayed start until volume is non-zero
+            // Ch17: zero-volume note suppressed; revival on first slide tick (row 1, tick 7)
             {
                 var notes = ChannelNotes(song, 17);
                 Assert.Single(notes);
-                Assert.Equal(6, ModStart(notes[0]));
+                Assert.Equal(7, ModStart(notes[0]));
             }
         }
     }
