@@ -8,20 +8,18 @@ using Xunit;
 namespace Remuxer.Tests
 {
     /// <summary>
-    /// Effect-lane MIDI conversion coverage for libRemuxer/test-files/FX.XM.
+    /// Effect-lane MIDI conversion coverage for libRemuxer/test-files/FX.{XM,S3M,IT}.
     /// Pattern/speed layout is asserted in libRemuxer GoogleTest (FxFixtureTests) via libopenmpt.
-    /// Durations are in module ticks; XM resolution is 24 tpb, MIDI conversion uses 480 tpb
+    /// Durations are in module ticks; module resolution is 24 tpb, MIDI conversion uses 480 tpb
     /// → 1 module tick = 20 MIDI ticks.
     /// </summary>
     public class FxXmTests
     {
         const int MidiTicksPerBeat = 480;
-        const int MidiPerModTick = MidiTicksPerBeat / 24; // XM 24 tpb → 20 MIDI ticks per module tick
+        const int MidiPerModTick = MidiTicksPerBeat / 24; // 24 tpb → 20 MIDI ticks per module tick
         const int Speed = 6;
-        // Ch1: sample-end duration depends on pitch. OpenMPT's XM loader adds +12 to file notes
-        // (Load_xm.cpp ReadXMPatterns: `m.note += 12`), then ModReader emits MIDI = openmptNote - 1
-        // → file note 50 → OpenMPT 62 → MIDI 61.
-        const int Ch1MidiPitch = 61;
+        // Ch1 XM: file note 50 → OpenMPT 62 → MIDI 61 (sample-end duration depends on this pitch).
+        const int Ch1XmMidiPitch = 61;
 
         static int ModStart(Note n)
         {
@@ -42,34 +40,43 @@ namespace Remuxer.Tests
             return song.Tracks[track].Notes.OrderBy(n => n.start).ThenBy(n => n.pitch).ToList();
         }
 
-        [Fact]
-        [Trait("Category", "Integration")]
-        public void Fx_xm_converts_effect_channels_to_expected_midi_notes()
+        public static IEnumerable<object[]> FxFixtures()
         {
-            string input = TestFiles.PathTo("FX.XM");
+            yield return new object[] { "FX.XM" };
+            yield return new object[] { "FX.S3M" };
+            yield return new object[] { "FX.IT" };
+        }
+
+        [Theory]
+        [MemberData(nameof(FxFixtures))]
+        [Trait("Category", "Integration")]
+        public void Fx_converts_effect_channels_to_expected_midi_notes(string fixtureName)
+        {
+            string input = TestFiles.PathTo(fixtureName);
             using var dir = TestFiles.TempPath.Directory("vm_remuxer_fx_");
             string midi = Path.Combine(dir.Path, "out.mid");
 
             var (code, stdout, stderr) = RemuxerProcess.Run(input, "-m" + midi);
-            Assert.True(code == 0, $"exit {code}\nstdout:\n{stdout}\nstderr:\n{stderr}");
+            Assert.True(code == 0, $"{fixtureName}: exit {code}\nstdout:\n{stdout}\nstderr:\n{stderr}");
             Assert.True(File.Exists(midi), "midi missing");
 
             var song = new Song();
             song.OpenMidiFile(midi);
             Assert.Equal(MidiTicksPerBeat, song.TicksPerBeat);
 
-            // Ch0: Early note end (EC1) → duration 1
+            // Ch0: Early note end (EC1 / SC1) → duration 1
             {
                 var notes = ChannelNotes(song, 0);
                 Assert.Single(notes);
                 Assert.Equal(0, ModStart(notes[0]));
                 Assert.Equal(1, ModDuration(notes[0]));
             }
-            // Ch1: Sample end = note end → duration 1
+            // Ch1: Sample end = note end → duration 1 (XM pitch fixed for sample-length math)
             {
                 var notes = ChannelNotes(song, 1);
                 Assert.Single(notes);
-                Assert.Equal(Ch1MidiPitch, notes[0].pitch);
+                if (fixtureName.Equals("FX.XM", StringComparison.OrdinalIgnoreCase))
+                    Assert.Equal(Ch1XmMidiPitch, notes[0].pitch);
                 Assert.Equal(1, ModDuration(notes[0]));
             }
             // Ch2: Volume 0 on next row → duration 6
@@ -78,7 +85,7 @@ namespace Remuxer.Tests
                 Assert.Single(notes);
                 Assert.Equal(6, ModDuration(notes[0]));
             }
-            // Ch3: Note delay ED1 → start tick 1, duration 5
+            // Ch3: Note delay ED1 / SD1 → start tick 1, duration 5
             {
                 var notes = ChannelNotes(song, 3);
                 Assert.Single(notes);
@@ -110,7 +117,7 @@ namespace Remuxer.Tests
                 Assert.Equal(44, ModDuration(Assert.Single(ChannelNotes(song, 8))));
                 Assert.Equal(44, ModDuration(Assert.Single(ChannelNotes(song, 9))));
             }
-            // Ch10: EB fine volume down → duration 186
+            // Ch10: fine volume down → duration 186
             {
                 Assert.Equal(186, ModDuration(Assert.Single(ChannelNotes(song, 10))));
             }
@@ -134,7 +141,7 @@ namespace Remuxer.Tests
                 Assert.Equal(6, ModDuration(notes[0]));
                 Assert.Equal(Speed, ModStart(notes[1])); // row 1 @ speed 6
             }
-            // Ch13: E92 retrigger → 3 notes dur 2 at starts 0, 2, 4
+            // Ch13: E92 / Q02 retrigger → 3 notes dur 2 at starts 0, 2, 4
             {
                 var notes = ChannelNotes(song, 13);
                 Assert.Equal(3, notes.Count);
@@ -154,10 +161,13 @@ namespace Remuxer.Tests
                 Assert.Equal(notes[0].pitch + 1, notes[1].pitch);
             }
             // Ch16: Clamp volume at <=64, then >=0, then volume + 1 → revival on tick 13
-            // (row 2 @ speed 6; normal slides skip the first tick of the row)
+            // (row 2 @ speed 6; normal slides skip the first tick of the row).
+            // S3M/IT use effect D F0 / D 0F / D 10 (same ±F then +1 as XM vol column).
             {
                 var notes = ChannelNotes(song, 16);
+                Assert.Equal(2, notes.Count);
                 Assert.Equal(0, ModStart(notes[0]));
+                Assert.Equal(11, ModDuration(notes[0]));
                 Assert.Equal(13, ModStart(notes[1]));
             }
             // Ch17: zero-volume note suppressed; revival on first slide tick (row 1, tick 7)
