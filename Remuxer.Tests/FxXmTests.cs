@@ -50,7 +50,7 @@ namespace Remuxer.Tests
             var mod = XmFixture.Load(TestFiles.PathTo("FX.XM"));
 
             Assert.Equal(6, mod.Speed);
-            Assert.Equal(16, mod.Channels);
+            Assert.Equal(18, mod.Channels);
             Assert.Equal(1, mod.NumPatterns); // FX.XM is single-pattern; XmFixture only asserts on pattern 0
             Assert.Equal(2, mod.NumInstruments);
             // Linear freq table bit unused by our asserts; speed/tempo are what matter.
@@ -118,6 +118,25 @@ namespace Remuxer.Tests
             // Ch13: E92; note-off next row
             AssertNoteCell(C(mod, 0, 13), ins: 1, fx: 0xE, param: 0x92);
             Assert.Equal(XmFixture.NoteKeyOff, C(mod, 1, 13).Note);
+            // Ch14: porta retrigger — note rows 0–1; row 1 effect 300; one pitch step up
+            AssertNoteCell(C(mod, 0, 14), ins: 1, fx: 0, param: 0);
+            AssertNoteCell(C(mod, 1, 14), ins: 1, fx: 0x3, param: 0x00);
+            Assert.Equal(C(mod, 0, 14).Note + 1, C(mod, 1, 14).Note);
+            // Ch15: porta retrigger — same as ch14 with effect 500
+            AssertNoteCell(C(mod, 0, 15), ins: 1, fx: 0, param: 0);
+            AssertNoteCell(C(mod, 1, 15), ins: 1, fx: 0x5, param: 0x00);
+            Assert.Equal(C(mod, 0, 15).Note + 1, C(mod, 1, 15).Note);
+            // Ch16: clamp volume ≤ 64 — note + vol-column +F on row 0; empty row 1
+            AssertNoteCell(C(mod, 0, 16), ins: 1, fx: 0, param: 0);
+            Assert.Equal(0x7F, C(mod, 0, 16).Vol);
+            Assert.True(C(mod, 1, 16).IsEmpty, "ch16 row 1 should be empty");
+            // Ch17: clamp volume ≥ 0 / no note at zero volume
+            AssertNoteCell(C(mod, 0, 17), ins: 1, fx: 0, param: 0);
+            Assert.Equal(0x10, C(mod, 0, 17).Vol); // set vol 0
+            Assert.Equal(0, C(mod, 1, 17).Note);
+            Assert.Equal(0x6F, C(mod, 1, 17).Vol); // -F
+            Assert.Equal(0, C(mod, 2, 17).Note);
+            Assert.Equal(0x71, C(mod, 2, 17).Vol); // +1
         }
 
         /// <summary>Assert a sounding note is present (pitch unconstrained) with the given ins/fx/param.</summary>
@@ -236,6 +255,27 @@ namespace Remuxer.Tests
                     Assert.Equal(2, ModDuration(notes[i]));
                     Assert.Equal(i * 2, ModStart(notes[i]));
                 }
+            }
+            // Ch14 / Ch15: porta retrigger → notes at module ticks 0 and 6; second pitch +1
+            foreach (int ch in new[] { 14, 15 })
+            {
+                var notes = ChannelNotes(song, ch);
+                Assert.Equal(2, notes.Count);
+                Assert.Equal(0, ModStart(notes[0]));
+                Assert.Equal(Speed, ModStart(notes[1]));
+                Assert.Equal(notes[0].pitch + 1, notes[1].pitch);
+            }
+            // Ch16: volume clamped ≤ 64 → note-start velocity 64
+            {
+                var notes = ChannelNotes(song, 16);
+                Assert.Single(notes);
+                Assert.Equal(64, notes[0].velocity);
+            }
+            // Ch17: zero-volume note suppressed; only revival note at module tick 12
+            {
+                var notes = ChannelNotes(song, 17);
+                Assert.Single(notes);
+                Assert.Equal(12, ModStart(notes[0]));
             }
         }
     }
