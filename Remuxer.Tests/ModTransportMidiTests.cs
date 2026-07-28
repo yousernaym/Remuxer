@@ -91,9 +91,9 @@ namespace Remuxer.Tests
             Assert.Equal(NotePitch, notes[1].pitch);
         }
 
-        // EE2/SE2 plays row 0 three times (18 ticks). The volume slide of 4 per tick skips the first
-        // tick of each pass — 5 applications on the first, 6 on each repeat — so the volume reaches
-        // 0 on the 16th application, at module tick 16.
+        // EE2/SE2 plays row 0 three times (18 ticks). ModReader expands the delayed row into a single
+        // 18-tick block, so the volume slide of 4 per tick is skipped only on tick 0 and then applied
+        // on every tick from 1 — the volume reaches 0 on the 16th application, at module tick 16.
         [Theory]
         [MemberData(nameof(RowRepeatFixtures))]
         [Trait("Category", "Integration")]
