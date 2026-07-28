@@ -1,5 +1,4 @@
 using Midi;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,17 +8,16 @@ namespace Remuxer.Tests
 {
     /// <summary>
     /// Effect-lane MIDI conversion coverage for libRemuxer/test-files/FX.{XM,S3M,IT}.
-    /// Pattern/speed layout is asserted in libRemuxer GoogleTest (FxFixtureTests) via libopenmpt.
+    /// Pattern/speed layout (including Ch1 OpenMPT note pitch) is asserted in libRemuxer
+    /// GoogleTest (FxFixtureTests) via libopenmpt.
     /// Durations are in module ticks; module resolution is 24 tpb, MIDI conversion uses 480 tpb
     /// → 1 module tick = 20 MIDI ticks.
     /// </summary>
-    public class FxXmTests
+    public class FxMidiTests
     {
         const int MidiTicksPerBeat = 480;
         const int MidiPerModTick = MidiTicksPerBeat / 24; // 24 tpb → 20 MIDI ticks per module tick
         const int Speed = 6;
-        // Ch1 XM: file note 50 → OpenMPT 62 → MIDI 61 (sample-end duration depends on this pitch).
-        const int Ch1XmMidiPitch = 61;
 
         static int ModStart(Note n)
         {
@@ -71,12 +69,10 @@ namespace Remuxer.Tests
                 Assert.Equal(0, ModStart(notes[0]));
                 Assert.Equal(1, ModDuration(notes[0]));
             }
-            // Ch1: Sample end = note end → duration 1 (XM pitch fixed for sample-length math)
+            // Ch1: Sample end = note end → duration 1 (pitch fixed in FxFixtureTests)
             {
                 var notes = ChannelNotes(song, 1);
                 Assert.Single(notes);
-                if (fixtureName.Equals("FX.XM", StringComparison.OrdinalIgnoreCase))
-                    Assert.Equal(Ch1XmMidiPitch, notes[0].pitch);
                 Assert.Equal(1, ModDuration(notes[0]));
             }
             // Ch2: Volume 0 on next row → duration 6
