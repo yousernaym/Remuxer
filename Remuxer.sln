@@ -25,19 +25,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libopenmpt", "libRemuxer\openmpt\build\vs2019win10\libopenmpt.vcxproj", "{9C5101EF-3E20-4558-809B-277FDD50E878}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libopenmpt", "libRemuxer\openmpt\build\vs2022win10\libopenmpt.vcxproj", "{9C5101EF-3E20-4558-809B-277FDD50E878}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ogg", "libRemuxer\openmpt\build\vs2019win10\ext\ogg.vcxproj", "{D8D5E11C-F959-49EF-B741-B3F6DE52DED8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ogg", "libRemuxer\openmpt\build\vs2022win10\ext\ogg.vcxproj", "{D8D5E11C-F959-49EF-B741-B3F6DE52DED8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vorbis", "libRemuxer\openmpt\build\vs2019win10\ext\vorbis.vcxproj", "{B544DCB7-16E5-41BC-B51B-7EAD8CFDFA05}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vorbis", "libRemuxer\openmpt\build\vs2022win10\ext\vorbis.vcxproj", "{B544DCB7-16E5-41BC-B51B-7EAD8CFDFA05}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpg123", "libRemuxer\openmpt\build\vs2019win10\ext\mpg123.vcxproj", "{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpg123", "libRemuxer\openmpt\build\vs2022win10\ext\mpg123.vcxproj", "{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Remuxer.Tests", "Remuxer.Tests\Remuxer.Tests.csproj", "{274B3572-3B50-484C-B311-8902B41D5896}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "midilib", "..\midiLib\midilib.csproj", "{E08DD009-02C9-4F0F-98A8-CA290A144D84}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libRemuxer.Tests", "libRemuxer\tests\libRemuxer.Tests.vcxproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D8D5E11C-F959-49EF-B741-B3F6DE52DED8} = {D8D5E11C-F959-49EF-B741-B3F6DE52DED8}
+		{B544DCB7-16E5-41BC-B51B-7EAD8CFDFA05} = {B544DCB7-16E5-41BC-B51B-7EAD8CFDFA05}
+		{7ADFAFB9-0A83-4D35-9891-FB24FDF30B53} = {7ADFAFB9-0A83-4D35-9891-FB24FDF30B53}
+		{9C5101EF-3E20-4558-809B-277FDD50E878} = {9C5101EF-3E20-4558-809B-277FDD50E878}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
