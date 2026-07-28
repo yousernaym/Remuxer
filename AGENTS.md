@@ -77,8 +77,13 @@ dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category!=Integration" 
 dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category=Integration" --nologo
 ```
 
-Format fixtures live in [`libRemuxer/test-files/`](libRemuxer/test-files/) (`minimal.mod` / `.ahx` / `.hvl` /
-`.sid` / `FX.XM` / `FX.S3M` / `FX.IT`). `Remuxer.Tests` still requires the sibling [`midiLib`](../midiLib/)
-checkout (project reference) to parse and validate generated MIDI. FX pattern layout is asserted in
-libRemuxer GoogleTest (openmpt); MIDI conversion for those fixtures is Integration (`FxMidiTests`).
-GoogleTest (Song/FileFormat/Wav + openmpt FX fixtures): see [libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).
+Format fixtures live in [`libRemuxer/test-files/`](libRemuxer/test-files/): `minimal.mod` / `.ahx` /
+`.hvl` / `.sid`, the per-note effect set `FX.{XM,S3M,IT}`, and the transport (flow-control) set under
+`mod-transport/` — position jump, pattern break, pattern delay, pattern loop and speed/tempo, each as a
+hand-authored XM plus generated S3M / IT twins. `Remuxer.Tests` still requires the sibling
+[`midiLib`](../midiLib/) checkout (project reference) to parse and validate generated MIDI.
+
+Pattern and order layout for both fixture sets is asserted in libRemuxer GoogleTest (openmpt); the MIDI
+they convert to is Integration — `FxMidiTests` (effect lanes) and `ModTransportMidiTests` (note start
+ticks, note counts and tempo-event times), sharing the module-tick helpers in `ModMidi`. GoogleTest
+(Song/FileFormat/Wav + the openmpt fixture suites): see [libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).
