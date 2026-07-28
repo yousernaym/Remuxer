@@ -63,7 +63,7 @@ namespace Remuxer.Tests
             return song;
         }
 
-        // B01 on order 0 row 0 skips straight to order 1, so its row 0 note starts one row in.
+        // B01 on order 0 row 0 skips to order 1 after row 0, so the row-0 note of order 1 starts one row from module start.
         [Theory]
         [MemberData(nameof(PatternJumpFixtures))]
         [Trait("Category", "Integration")]
