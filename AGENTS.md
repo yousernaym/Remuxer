@@ -78,6 +78,7 @@ dotnet test Remuxer.Tests\Remuxer.Tests.csproj --filter "Category=Integration" -
 ```
 
 Format fixtures live in [`libRemuxer/test-files/`](libRemuxer/test-files/) (`minimal.mod` / `.ahx` / `.hvl` /
-`.sid`). `Remuxer.Tests` still requires the sibling [`midiLib`](../midiLib/) checkout (project reference)
-to parse and validate generated MIDI. GoogleTest (Song/FileFormat/Wav + openmpt FX fixtures): see
-[libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).
+`.sid` / `FX.XM` / `FX.S3M` / `FX.IT`). `Remuxer.Tests` still requires the sibling [`midiLib`](../midiLib/)
+checkout (project reference) to parse and validate generated MIDI. FX pattern layout is asserted in
+libRemuxer GoogleTest (openmpt); MIDI conversion for those fixtures is Integration (`FxMidiTests`).
+GoogleTest (Song/FileFormat/Wav + openmpt FX fixtures): see [libRemuxer/AGENTS.md](libRemuxer/AGENTS.md).
