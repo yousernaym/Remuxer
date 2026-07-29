@@ -1,8 +1,8 @@
 using Midi;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Xunit;
+using static Remuxer.Tests.ModMidi;
 
 namespace Remuxer.Tests
 {
@@ -10,34 +10,10 @@ namespace Remuxer.Tests
     /// Effect-lane MIDI conversion coverage for libRemuxer/test-files/FX.{XM,S3M,IT}.
     /// Pattern/speed layout (including Ch1 OpenMPT note pitch) is asserted in libRemuxer
     /// GoogleTest (FxFixtureTests) via libopenmpt.
-    /// Durations are in module ticks; module resolution is 24 tpb, MIDI conversion uses 480 tpb
-    /// → 1 module tick = 20 MIDI ticks.
+    /// Durations are in module ticks — see <see cref="ModMidi"/>.
     /// </summary>
     public class FxMidiTests
     {
-        const int MidiTicksPerBeat = 480;
-        const int MidiPerModTick = MidiTicksPerBeat / 24; // 24 tpb → 20 MIDI ticks per module tick
-        const int Speed = 6;
-
-        static int ModStart(Note n)
-        {
-            Assert.Equal(0, n.start % MidiPerModTick);
-            return n.start / MidiPerModTick;
-        }
-
-        static int ModDuration(Note n)
-        {
-            Assert.Equal(0, (n.stop - n.start) % MidiPerModTick);
-            return (n.stop - n.start) / MidiPerModTick;
-        }
-
-        static List<Note> ChannelNotes(Song song, int channel)
-        {
-            int track = channel + 1; // track 0 = tempo; channel c → track c+1
-            Assert.True(track < song.Tracks.Count, $"missing MIDI track for channel {channel}");
-            return song.Tracks[track].Notes.OrderBy(n => n.start).ThenBy(n => n.pitch).ToList();
-        }
-
         public static IEnumerable<object[]> FxFixtures()
         {
             yield return new object[] { "FX.XM" };
